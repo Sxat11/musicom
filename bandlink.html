@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BandLink — Músicos y Bandas</title>
+  <!-- Librería oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f4f2ee;
+      --card: #ffffff;
+      --primary: #0a66c2;
+      --primary-hover: #004182;
+      --primary-soft: #eef5fc;
+      --text: #191919;
+      --muted: #666666;
+      --border: #e0dfdc;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Barra superior */
+    .navbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 10px 20px;
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .logo-badge {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 360px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: #eef3f8;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-box:focus {
+      background: #fff;
+      border-color: var(--primary);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .btn-logout:hover {
+      border-color: #191919;
+      color: #191919;
+    }
+
+    /* Estructura de 2 columnas */
+    .layout {
+      max-width: 1100px;
+      margin: 22px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    /* Columna Izquierda: Perfil y Usuarios */
+    .profile-header {
+      text-align: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+
+    .badge-type {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .profile-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .users-list-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0efec;
+    }
+
+    .user-item:last-child {
+      border-bottom: none;
+    }
+
+    .user-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .user-info p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn-small {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: none;
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-small:hover {
+      background: #d8e9fa;
+    }
+
+    /* Columna Derecha: Crear publicación y Feed */
+    .composer-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .composer select,
+    .composer input,
+    .composer textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .composer textarea {
+      resize: vertical;
+      min-height: 75px;
+      margin-bottom: 10px;
+    }
+
+    .composer select:focus,
+    .composer input:focus,
+    .composer textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .composer-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .guest-banner {
+      background: #fff8e6;
+      border: 1px solid #f5d68a;
+      color: #7a5200;
+      padding: 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Filtros */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filter-chip {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* Tarjeta de publicación */
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .post-author {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .post-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .post-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .post-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .post-body {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+      margin-bottom: 14px;
+      white-space: pre-line;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #f0efec;
+      padding-top: 10px;
+    }
+
+    .action-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      background: #f5f5f5;
+      color: var(--text);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px 16px;
+      font-size: 14px;
+    }
+
+    /* Modal de contacto */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 200;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: var(--radius);
+      max-width: 420px;
+      width: 100%;
+      padding: 22px;
+    }
+
+    @media (max-width: 780px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <div class="logo-badge">BL</div>
+        <input
+          type="text"
+          id="search-input"
+          class="search-box"
+          placeholder="Buscar por instrumento, banda, ciudad..."
+          oninput="renderPosts()"
+        />
+      </div>
+      <div class="nav-right">
+        <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Columna Izquierda: Perfil y Usuarios Registrados -->
+    <aside>
+      <div class="card">
+        <div class="profile-header">
+          <div class="avatar" id="my-avatar">?</div>
+          <span class="badge-type" id="my-type">Usuario</span>
+          <div class="profile-name" id="my-name">Cargando...</div>
+          <div class="profile-meta" id="my-meta"></div>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); text-align: center;">
+          Conectado en tiempo real a Supabase
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="users-list-title">
+          <span>Músicos y Bandas</span>
+          <span id="users-count" style="font-size: 12px; color: var(--muted);">0</span>
+        </div>
+        <div id="users-list">
+          <p class="empty-state">Cargando usuarios...</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Columna Derecha: Publicaciones -->
+    <section>
+      <!-- Aviso si es invitado -->
+      <div class="guest-banner" id="guest-banner" style="display: none;">
+        <span>Estás navegando como <strong>Invitado</strong>. Inicia sesión o regístrate para publicar anuncios.</span>
+        <button class="btn-primary" onclick="logout()">Registrarme</button>
+      </div>
+
+      <!-- Formulario para crear publicación (solo usuarios registrados) -->
+      <div class="card composer" id="composer-card">
+        <form onsubmit="createPost(event)">
+          <div class="composer-row">
+            <select id="post-type" required>
+              <option value="Busco músico">Busco músico para banda</option>
+              <option value="Busco banda">Músico busca banda</option>
+              <option value="Demo / Bolo">Bolo / Colaboración</option>
+            </select>
+            <input type="text" id="post-city" placeholder="Ciudad (ej. A Coruña)" required />
+          </div>
+          <div style="margin-bottom: 10px;">
+            <input type="text" id="post-title" placeholder="Título del anuncio (ej. Buscamos batería para banda de Rock)" required />
+          </div>
+          <textarea id="post-desc" placeholder="Describe el estilo, nivel, ensayos, condiciones..." required></textarea>
+          <div class="composer-footer">
+            <span style="font-size: 12px; color: var(--muted);" id="composer-status">Visible para todos los usuarios</span>
+            <button type="submit" class="btn-primary" id="btn-publish">Publicar anuncio</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Filtros rápidos -->
+      <div class="filters">
+        <button class="filter-chip active" onclick="setFilter('Todos', this)">Todos</button>
+        <button class="filter-chip" onclick="setFilter('Busco músico', this)">Busco músico</button>
+        <button class="filter-chip" onclick="setFilter('Busco banda', this)">Busco banda</button>
+        <button class="filter-chip" onclick="setFilter('Demo / Bolo', this)">Bolos / Colaboraciones</button>
+      </div>
+
+      <!-- Feed de publicaciones -->
+      <div id="posts-feed">
+        <div class="card empty-state">Cargando publicaciones desde la nube...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal sencillo de contacto -->
+  <div class="modal-backdrop" id="contact-modal">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 8px;" id="modal-title">Contactar</h3>
+      <p style="font-size: 14px; color: var(--muted); margin-bottom: 14px;" id="modal-info"></p>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn-primary" onclick="closeModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Conexión a tu base de datos en Supabase
+    const SUPABASE_URL = "https://yonookidmmmmjwmlikow.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvbm9va2lkbW1tbWp3bWxpa293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5NTE3NjYsImV4cCI6MjExMDUyNzc2Nn0.4xm_P4ICOyxBUeulpcZ7nYLdMUOt79i5IFdNZ1FOPpU";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let session = null;
+    let allPosts = [];
+    let allUsers = [];
+    let currentFilter = "Todos";
+
+    // Inicializar página
+    window.addEventListener("DOMContentLoaded", async () => {
+      const rawSession = localStorage.getItem("bandlink_session");
+      if (!rawSession) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      session = JSON.parse(rawSession);
+      setupUserProfile();
+      await Promise.all([loadUsers(), loadPosts()]);
+    });
+
+    function setupUserProfile() {
+      document.getElementById("my-name").textContent = session.name || "Invitado";
+      document.getElementById("my-avatar").textContent = (session.name || "?").charAt(0).toUpperCase();
+      document.getElementById("my-meta").textContent = `${session.role} · ${session.city}`;
+
+      const typeLabel =
+        session.accountType === "banda"
+          ? "Banda"
+          : session.accountType === "musico"
+          ? "Músico"
+          : "Invitado";
+      document.getElementById("my-type").textContent = typeLabel;
+
+      if (session.isGuest) {
+        document.getElementById("composer-card").style.display = "none";
+        document.getElementById("guest-banner").style.display = "flex";
+      } else {
+        document.getElementById("post-city").value = session.city || "";
+      }
+    }
+
+    // Cargar usuarios reales desde Supabase
+    async function loadUsers() {
+      const { data, error } = await db
+        .from("usuarios")
+        .select("id, tipo_cuenta, nombre, especialidad, ciudad, email")
+        .order("creado_en", { ascending: false });
+
+      if (error) {
+        document.getElementById("users-list").innerHTML = `<p class="empty-state">Error al cargar usuarios.</p>`;
+        return;
+      }
+
+      allUsers = data || [];
+      document.getElementById("users-count").textContent = allUsers.length;
+      renderUsers();
+    }
+
+    function renderUsers() {
+      const container = document.getElementById("users-list");
+      if (allUsers.length === 0) {
+        container.innerHTML = `<p class="empty-state">Aún no hay usuarios registrados.</p>`;
+        return;
+      }
+
+      container.innerHTML = allUsers
+        .map(
+          (u) => `
+          <div class="user-item">
+            <div class="user-info">
+              <h4>${escapeHtml(u.nombre)}</h4>
+              <p>${escapeHtml(u.especialidad)} · ${escapeHtml(u.ciudad)}</p>
+            </div>
+            <button class="btn-small" onclick="openContact('${escapeHtml(u.nombre)}', '${escapeHtml(u.email)}', '${escapeHtml(u.especialidad)}')">
+              Ver
+            </button>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    // Cargar publicaciones reales desde Supabase
+    async function loadPosts() {
+      const { data, error } = await db
+        .from("publicaciones")
+        .select("*")
+        .order("creado_en", { ascending: false });
+
+      if (error) {
+        document.getElementById("posts-feed").innerHTML = `<div class="card empty-state">Error al cargar publicaciones: ${error.message}</div>`;
+        return;
+      }
+
+      allPosts = data || [];
+      renderPosts();
+    }
+
+    // Publicar nuevo anuncio en Supabase
+    async function createPost(e) {
+      e.preventDefault();
+      if (session.isGuest) return;
+
+      const btn = document.getElementById("btn-publish");
+      btn.disabled = true;
+      btn.textContent = "Publicando...";
+
+      const newPost = {
+        autor_id: session.id || null,
+        autor_nombre: session.name,
+        autor_rol: session.role,
+        tipo_anuncio: document.getElementById("post-type").value,
+        titulo: document.getElementById("post-title").value.trim(),
+        descripcion: document.getElementById("post-desc").value.trim(),
+        ciudad: document.getElementById("post-city").value.trim(),
+        interesados: 0
+      };
+
+      const { error } = await db.from("publicaciones").insert([newPost]);
+
+      btn.disabled = false;
+      btn.textContent = "Publicar anuncio";
+
+      if (error) {
+        alert("No se pudo publicar: " + error.message);
+        return;
+      }
+
+      document.getElementById("post-title").value = "";
+      document.getElementById("post-desc").value = "";
+      await loadPosts();
+    }
+
+    // Sumar "Me interesa" en Supabase
+    async function toggleInterest(postId, currentCount) {
+      const newCount = (currentCount || 0) + 1;
+      const { error } = await db
+        .from("publicaciones")
+        .update({ interesados: newCount })
+        .eq("id", postId);
+
+      if (!error) {
+        await loadPosts();
+      }
+    }
+
+    function setFilter(filterName, btn) {
+      currentFilter = filterName;
+      document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      renderPosts();
+    }
+
+    function renderPosts() {
+      const feed = document.getElementById("posts-feed");
+      const query = document.getElementById("search-input").value.trim().toLowerCase();
+
+      const filtered = allPosts.filter((p) => {
+        const matchesType = currentFilter === "Todos" || p.tipo_anuncio === currentFilter;
+        const matchesSearch =
+          !query ||
+          p.titulo.toLowerCase().includes(query) ||
+          p.descripcion.toLowerCase().includes(query) ||
+          p.ciudad.toLowerCase().includes(query) ||
+          p.autor_nombre.toLowerCase().includes(query) ||
+          p.autor_rol.toLowerCase().includes(query);
+        return matchesType && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        feed.innerHTML = `<div class="card empty-state">No hay publicaciones que coincidan con tu búsqueda. ¡Sé el primero en publicar!</div>`;
+        return;
+      }
+
+      feed.innerHTML = filtered
+        .map((p) => {
+          const fecha = new Date(p.creado_en).toLocaleDateString("es-ES", {
+            day: "numeric",
+            month: "short"
+          });
+          return `
+            <article class="card">
+              <div class="post-header">
+                <div>
+                  <div class="post-author">${escapeHtml(p.autor_nombre)}</div>
+                  <div class="post-sub">${escapeHtml(p.autor_rol)} · ${escapeHtml(p.ciudad)} · ${fecha}</div>
+                </div>
+                <span class="post-tag">${escapeHtml(p.tipo_anuncio)}</span>
+              </div>
+              <h3 class="post-title">${escapeHtml(p.titulo)}</h3>
+              <p class="post-body">${escapeHtml(p.descripcion)}</p>
+              <div class="post-actions">
+                <button class="action-btn" onclick="toggleInterest('${p.id}', ${p.interesados || 0})">
+                  Me interesa (${p.interesados || 0})
+                </button>
+                <button class="action-btn" onclick="openContact('${escapeHtml(p.autor_nombre)}', '', '${escapeHtml(p.autor_rol)} - ${escapeHtml(p.ciudad)}')">
+                  Contactar
+                </button>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function openContact(name, email, extra) {
+      document.getElementById("modal-title").textContent = name;
+      document.getElementById("modal-info").textContent = email
+        ? `${extra} — Correo de contacto: ${email}`
+        : `${extra} — Puedes localizar este perfil en la lista de Músicos y Bandas de la izquierda para ver su correo.`;
+      document.getElementById("contact-modal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("contact-modal").classList.remove("open");
+    }
+
+    function logout() {
+      localStorage.removeItem("bandlink_session");
+      window.location.href = "index.html";
+    }
+
+ 
+  </script>
+</body>
+</html>

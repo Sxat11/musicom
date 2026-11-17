@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BandLink — Acceso y Registro</title>
+  <!-- Librería oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f4f2ee;
+      --card: #ffffff;
+      --primary: #0a66c2;
+      --primary-hover: #004182;
+      --primary-soft: #eef5fc;
+      --text: #191919;
+      --muted: #666666;
+      --border: #e0dfdc;
+      --danger: #cc1016;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .brand-side {
+      padding-right: 12px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .logo-badge {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-text {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-side h1 {
+      font-size: 36px;
+      line-height: 1.18;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .brand-side p {
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .feature-icon {
+      background: var(--primary-soft);
+      color: var(--primary);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .form-panel {
+      display: none;
+    }
+
+    .form-panel.active {
+      display: block;
+    }
+
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .role-option {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+    }
+
+    .role-option:hover {
+      border-color: #99c2eb;
+    }
+
+    .role-option.selected {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .role-option .role-title {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .role-option .role-desc {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .role-option.selected .role-desc {
+      color: #004182;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #b8b8b8;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.15);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .toggle-pass {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .error-msg {
+      background: #fdecea;
+      color: var(--danger);
+      font-size: 13px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 18px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .divider span {
+      padding: 0 12px;
+    }
+
+    .btn-guest {
+      width: 100%;
+      background: #fff;
+      color: #333;
+      border: 1.5px solid #8c8c8c;
+      padding: 11px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-guest:hover {
+      background: #f3f2ef;
+      border-color: #191919;
+    }
+
+    @media (max-width: 820px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .brand-side {
+        text-align: center;
+        padding-right: 0;
+      }
+      .features {
+        text-align: left;
+        max-width: 440px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <section class="brand-side">
+      <div class="logo">
+        <div class="logo-badge">BL</div>
+        <span class="logo-text">BandLink</span>
+      </div>
+      <h1>Conecta con músicos y bandas cerca de ti</h1>
+      <p>
+        La plataforma directa para encontrar integrantes para tu proyecto musical, unirte a bandas activas o cerrar bolos sin intermediarios.
+      </p>
+      <ul class="features">
+        <li>
+          <span class="feature-icon">1</span>
+          <span>Crea tu perfil real en la nube como <strong>músico</strong> o como <strong>banda</strong>.</span>
+        </li>
+        <li>
+          <span class="feature-icon">2</span>
+          <span>Publica anuncios visibles desde cualquier dispositivo al instante.</span>
+        </li>
+        <li>
+          <span class="feature-icon">3</span>
+          <span>Filtra por instrumento, género o ciudad y contacta directo.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="auth-card">
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Iniciar sesión</button>
+        <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Registrarse</button>
+      </div>
+
+      <!-- PANEL 1: INICIAR SESIÓN -->
+      <div class="form-panel active" id="panel-login">
+        <div class="error-msg" id="login-error"></div>
+        <form onsubmit="handleLogin(event)">
+          <div class="field">
+            <label for="login-email">Correo electrónico</label>
+            <input type="email" id="login-email" placeholder="ejemplo@correo.com" required />
+          </div>
+          <div class="field">
+            <label for="login-password">Contraseña</label>
+            <div class="password-wrap">
+              <input type="password" id="login-password" placeholder="Tu contraseña" required />
+              <button type="button" class="toggle-pass" onclick="togglePassword('login-password', this)">Mostrar</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="btn-login-submit">Entrar</button>
+        </form>
+      </div>
+
+      <!-- PANEL 2: REGISTRO (MÚSICO O BANDA) -->
+      <div class="form-panel" id="panel-register">
+        <div class="error-msg" id="register-error"></div>
+
+        <div class="role-selector">
+          <div class="role-option selected" id="role-musico" onclick="selectAccountType('musico')">
+            <span class="role-title">Soy Músico</span>
+            <span class="role-desc">Busco banda o bolos</span>
+          </div>
+          <div class="role-option" id="role-banda" onclick="selectAccountType('banda')">
+            <span class="role-title">Somos una Banda</span>
+            <span class="role-desc">Buscamos integrantes</span>
+          </div>
+        </div>
+
+        <form onsubmit="handleRegister(event)">
+          <div class="field">
+            <label for="reg-name" id="label-name">Nombre artístico o completo</label>
+            <input type="text" id="reg-name" placeholder="Ej. Carlos Pérez" required />
+          </div>
+
+          <div class="field" id="field-instrument">
+            <label for="reg-instrument">Instrumento principal</label>
+            <select id="reg-instrument">
+              <option value="Guitarrista">Guitarrista</option>
+              <option value="Bajista">Bajista</option>
+              <option value="Batería">Batería</option>
+              <option value="Vocalista">Vocalista</option>
+              <option value="Teclista / Pianista">Teclista / Pianista</option>
+              <option value="Viento / Metal">Viento / Metal</option>
+              <option value="Productor / DJ">Productor / DJ</option>
+              <option value="Otro instrumento">Otro instrumento</option>
+            </select>
+          </div>
+
+          <div class="field" id="field-genre" style="display: none;">
+            <label for="reg-genre">Estilo / Género principal de la banda</label>
+            <select id="reg-genre">
+              <option value="Rock / Alternativo">Rock / Alternativo</option>
+              <option value="Indie / Pop">Indie / Pop</option>
+              <option value="Metal / Hardcore">Metal / Hardcore</option>
+              <option value="Jazz / Blues / Soul">Jazz / Blues / Soul</option>
+              <option value="Funk / Fusion">Funk / Fusion</option>
+              <option value="Orquesta / Verbena">Orquesta / Verbena</option>
+              <option value="Urbano / Electrónica">Urbano / Electrónica</option>
+              <option value="Otro estilo">Otro estilo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="reg-city">Ciudad</label>
+            <input type="text" id="reg-city" placeholder="Ej. A Coruña, Madrid, Vigo..." required />
+          </div>
+
+          <div class="field">
+            <label for="reg-email">Correo electrónico</label>
+            <input type="email" id="reg-email" placeholder="tu@correo.com" required />
+          </div>
+
+          <div class="field">
+            <label for="reg-password">Contraseña (mínimo 4 caracteres)</label>
+            <div class="password-wrap">
+              <input type="password" id="reg-password" placeholder="Crea una contraseña" minlength="4" required />
+              <button type="button" class="toggle-pass" onclick="togglePassword('reg-password', this)">Mostrar</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-register-submit">Crear cuenta de Músico</button>
+        </form>
+      </div>
+
+      <div class="divider"><span>o también puedes</span></div>
+
+      <button type="button" class="btn-guest" onclick="continueAsGuest()">
+        Continuar como invitado
+      </button>
+    </section>
+  </main>
+
+  <script>
+    // Conexión a tu base de datos en Supabase
+    const SUPABASE_URL = "https://yonookidmmmmjwmlikow.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvbm9va2lkbW1tbWp3bWxpa293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5NTE3NjYsImV4cCI6MjExMDUyNzc2Nn0.4xm_P4ICOyxBUeulpcZ7nYLdMUOt79i5IFdNZ1FOPpU";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentAccountType = "musico";
+
+    function switchTab(tab) {
+      document.getElementById("tab-login").classList.toggle("active", tab === "login");
+      document.getElementById("tab-register").classList.toggle("active", tab === "register");
+      document.getElementById("panel-login").classList.toggle("active", tab === "login");
+      document.getElementById("panel-register").classList.toggle("active", tab === "register");
+      hideErrors();
+    }
+
+    function selectAccountType(type) {
+      currentAccountType = type;
+      document.getElementById("role-musico").classList.toggle("selected", type === "musico");
+      document.getElementById("role-banda").classList.toggle("selected", type === "banda");
+
+      const labelName = document.getElementById("label-name");
+      const inputName = document.getElementById("reg-name");
+      const fieldInstrument = document.getElementById("field-instrument");
+      const fieldGenre = document.getElementById("field-genre");
+      const submitBtn = document.getElementById("btn-register-submit");
+
+      if (type === "musico") {
+        labelName.textContent = "Nombre artístico o completo";
+        inputName.placeholder = "Ej. Carlos Pérez";
+        fieldInstrument.style.display = "block";
+        fieldGenre.style.display = "none";
+        submitBtn.textContent = "Crear cuenta de Músico";
+      } else {
+        labelName.textContent = "Nombre de la banda o proyecto";
+        inputName.placeholder = "Ej. Los Atlánticos";
+        fieldInstrument.style.display = "none";
+        fieldGenre.style.display = "block";
+        submitBtn.textContent = "Crear cuenta de Banda";
+      }
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "Ocultar";
+      } else {
+        input.type = "password";
+        btn.textContent = "Mostrar";
+      }
+    }
+
+    function showError(elementId, message) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.style.display = "block";
+    }
+
+    function hideErrors() {
+      document.getElementById("login-error").style.display = "none";
+      document.getElementById("register-error").style.display = "none";
+    }
+
+    function startSessionAndRedirect(sessionData) {
+      localStorage.setItem("bandlink_session", JSON.stringify(sessionData));
+      window.location.href = "bandlink.html";
+    }
+
+    // REGISTRO EN SUPABASE
+    async function handleRegister(e) {
+      e.preventDefault();
+      hideErrors();
+
+      const btn = document.getElementById("btn-register-submit");
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Creando cuenta...";
+
+      const name = document.getElementById("reg-name").value.trim();
+      const city = document.getElementById("reg-city").value.trim();
+      const email = document.getElementById("reg-email").value.trim().toLowerCase();
+      const password = document.getElementById("reg-password").value;
+
+      const specialty =
+        currentAccountType === "musico"
+          ? document.getElementById("reg-instrument").value
+          : "Banda · " + document.getElementById("reg-genre").value;
+
+      try {
+        const { data, error } = await db
+          .from("usuarios")
+          .insert([
+            {
+              tipo_cuenta: currentAccountType,
+              nombre: name,
+              especialidad: specialty,
+              ciudad: city,
+              email: email,
+              password: password
+            }
+          ])
+          .select()
+          .single();
+
+        if (error) {
+          if (error.code === "23505") {
+            showError("register-error", "Ese correo electrónico ya está registrado.");
+          } else {
+            showError("register-error", "Error de base de datos: " + error.message);
+          }
+          btn.disabled = false;
+          btn.textContent = originalText;
+          return;
+        }
+
+        startSessionAndRedirect({
+          id: data.id,
+          loggedIn: true,
+          isGuest: false,
+          accountType: data.tipo_cuenta,
+          name: data.nombre,
+          role: data.especialidad,
+          city: data.ciudad,
+          email: data.email
+        });
+      } catch (err) {
+        showError("register-error", "No se pudo conectar con Supabase. Revisa tu conexión.");
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    // INICIO DE SESIÓN EN SUPABASE
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideErrors();
+
+      const btn = document.getElementById("btn-login-submit");
+      btn.disabled = true;
+      btn.textContent = "Comprobando...";
+
+      const email = document.getElementById("login-email").value.trim().toLowerCase();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const { data, error } = await db
+          .from("usuarios")
+          .select("*")
+          .eq("email", email)
+          .eq("password", password)
+          .maybeSingle();
+
+        if (error) {
+          showError("login-error", "Error al consultar Supabase: " + error.message);
+          btn.disabled = false;
+          btn.textContent = "Entrar";
+          return;
+        }
+
+        if (!data) {
+          showError("login-error", "Correo o contraseña incorrectos.");
+          btn.disabled = false;
+          btn.textContent = "Entrar";
+          return;
+        }
+
+        startSessionAndRedirect({
+          id: data.id,
+          loggedIn: true,
+          isGuest: false,
+          accountType: data.tipo_cuenta,
+          name: data.nombre,
+          role: data.especialidad,
+          city: data.ciudad,
+          email: data.email
+        });
+      } catch (err) {
+        showError("login-error", "No se pudo conectar con el servidor.");
+        btn.disabled = false;
+        btn.textContent = "Entrar";
+      }
+    }
+
+    // ACCESO COMO INVITADO
+    function continueAsGuest() {
+      startSessionAndRedirect({
+        id: null,
+        loggedIn: false,
+        isGuest: true,
+        accountType: "invitado",
+        name: "Invitado",
+        role: "Modo lectura",
+        city: "España",
+        email: ""
+      });
+    }
+  </script>
+</body>
+</html>

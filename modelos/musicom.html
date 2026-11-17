@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BandLink | Conecta Músicos, Bandas y Audiciones</title>
+  <!-- Tailwind CSS para estilos limpios y adaptables -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fuente Inter para legibilidad profesional -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Iconos Phosphor para interfaz nítida -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d9eaff',
+              600: '#0a66c2', // Azul profesional estilo referencia
+              700: '#004182',
+            },
+            canvas: '#f4f2ee', // Fondo gris cálido tipo referencia
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Ajustes personalizados ligeros */
+    body {
+      background-color: #f4f2ee;
+      color: #191919;
+    }
+
+    /* Scrollbar discreta para listas y chat */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animación suave para barras de audio simuladas */
+    @keyframes eqPulse {
+      0%, 100% { transform: scaleY(0.35); }
+      50% { transform: scaleY(1); }
+    }
+    .playing .eq-bar {
+      animation: eqPulse 0.7s ease-in-out infinite;
+    }
+    .playing .eq-bar:nth-child(2) { animation-delay: 0.15s; }
+    .playing .eq-bar:nth-child(3) { animation-delay: 0.3s; }
+    .playing .eq-bar:nth-child(4) { animation-delay: 0.1s; }
+    .playing .eq-bar:nth-child(5) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+  <!-- =====================================================================
+       1. BARRA DE NAVEGACIÓN SUPERIOR FIJA (NAVBAR)
+       ===================================================================== -->
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-2xs">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Izquierda: Logo + Buscador -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
+        <!-- Logo -->
+        <a href="#" onclick="resetFilters(); return false;" class="flex items-center gap-2 shrink-0 group" title="Inicio BandLink">
+          <div class="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center shadow-xs group-hover:bg-brand-700 transition">
+            <i class="ph-fill ph-vinyl-record text-2xl"></i>
+          </div>
+          <span class="font-bold text-lg tracking-tight text-gray-900 hidden lg:inline">Band<span class="text-brand-600">Link</span></span>
+        </a>
+
+        <!-- Buscador en tiempo real -->
+        <div class="relative flex-1">
+          <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base"></i>
+          <input 
+            id="searchInput"
+            type="text" 
+            placeholder="Buscar músicos, instrumentos, bandas o ciudades..." 
+            class="w-full bg-[#edf3f8] focus:bg-white text-sm text-gray-800 placeholder-gray-500 pl-9 pr-8 py-1.5 rounded-full border border-transparent focus:border-brand-600 focus:outline-none transition"
+          >
+          <button 
+            id="clearSearchBtn"
+            onclick="clearSearch()"
+            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            title="Limpiar búsqueda"
+          >
+            <i class="ph-fill ph-x-circle"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Centro / Derecha: Navegación con iconos y badges -->
+      <nav class="flex items-center gap-1 sm:gap-2 md:gap-5 h-full">
+        <!-- Inicio -->
+        <button onclick="setActiveNav(this, 'all')" class="nav-item active flex flex-col items-center justify-center h-full px-2 sm:px-3 border-b-2 border-gray-900 text-gray-900 transition">
+          <i class="ph-fill ph-house text-xl"></i>
+          <span class="text-[11px] font-medium hidden md:block mt-0.5">Inicio</span>
+        </button>
+
+        <!-- Músicos / Mi Red -->
+        <button onclick="setActiveNav(this, 'musician')" class="nav-item relative flex flex-col items-center justify-center h-full px-2 sm:px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition">
+          <div class="relative">
+            <i class="ph-fill ph-users-three text-xl"></i>
+            <span class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 rounded-full leading-4">3</span>
+          </div>
+          <span class="text-[11px] font-medium hidden md:block mt-0.5">Músicos</span>
+        </button>
+
+        <!-- Audiciones / Bolos -->
+        <button onclick="setActiveNav(this, 'band')" class="nav-item flex flex-col items-center justify-center h-full px-2 sm:px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition">
+          <i class="ph-fill ph-microphone-stage text-xl"></i>
+          <span class="text-[11px] font-medium hidden md:block mt-0.5">Audiciones</span>
+        </button>
+
+        <!-- Mensajes -->
+        
+        <button onclick="toggleChatDrawer(true)" class="nav-item flex flex-col items-center justify-center h-full px-2 sm:px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition">
+          <i class="ph-fill ph-chat-circle-dots text-xl"></i>
+          <span class="text-[11px] font-medium hidden md:block mt-0.5">Mensajes</span>
+        </button>
+
+        <!-- Notificaciones -->
+        <button onclick="showToast('Tienes 5 nuevas alertas de audiciones cerca de Pontevedra')" class="nav-item relative flex flex-col items-center justify-center h-full px-2 sm:px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-900 transition">
+          <div class="relative">
+            <i class="ph-fill ph-bell text-xl"></i>
+            <span class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 rounded-full leading-4">5</span>
+          </div>
+          <span class="text-[11px] font-medium hidden md:block mt-0.5">Alertas</span>
+        </button>
+
+        <!-- Separador vertical -->
+        <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
+
+        <!-- Perfil ("Yo") -->
+        <button onclick="openProfileModal()" class="flex flex-col items-center justify-center h-full px-1.5 text-gray-600 hover:text-gray-900 transition">
+          <img 
+            src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=120&q=80" 
+            onerror="this.src='https://placehold.co/80x80/0a66c2/ffffff?text=M'"
+            alt="Manuel" 
+            class="w-6 h-6 rounded-full object-cover border border-gray-300"
+          >
+          <span class="text-[11px] font-medium hidden md:flex items-center gap-0.5 mt-0.5">
+            Yo <i class="ph-fill ph-caret-down text-[10px]"></i>
+          </span>
+        </button>
+
+        <!-- Botón CTA Banda Pro -->
+        <button onclick="openCreateModal('band')" class="hidden xl:flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-semibold px-3 py-1.5 rounded-full transition">
+          <i class="ph-fill ph-sparkle text-amber-600"></i>
+          Publicar Bolo
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       2. CONTENEDOR PRINCIPAL DE 3 COLUMNAS
+       ===================================================================== -->
+  <main class="max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 flex-1">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+
+      <!-- -------------------------------------------------------------------
+           COLUMNA IZQUIERDA: PERFIL Y PANEL DE MÚSICO (3 columnas en desktop)
+           ------------------------------------------------------------------- -->
+      <aside class="md:col-span-4 lg:col-span-3 space-y-3">
+        
+        <!-- Tarjeta principal de perfil -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
+          <!-- Portada -->
+          <div class="h-16 bg-gradient-to-r from-slate-800 via-brand-700 to-brand-600 relative">
+            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]"></div>
+          </div>
+
+          <!-- Avatar + Info -->
+          <div class="px-4 pb-4 text-center relative">
+            <img 
+              src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80" 
+              onerror="this.src='https://placehold.co/120x120/0a66c2/ffffff?text=MF'"
+              alt="Manuel" 
+              class="w-18 h-18 w-[72px] h-[72px] rounded-full object-cover border-2 border-white mx-auto -mt-9 shadow-sm bg-white"
+            >
+            <h1 class="font-bold text-base text-gray-900 mt-2 hover:underline cursor-pointer" onclick="openProfileModal()">
+              Manuel Fernández
+            </h1>
+            <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+              Guitarrista rítmico & Productor • Rock, Funk y Verbena
+            </p>
+            <p class="text-[11px] text-gray-400 mt-1">
+              Pontevedra y alrededores
+            </p>
+
+            <!-- Banda actual -->
+            <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-center gap-2 text-xs font-medium text-gray-700">
+              <span class="w-5 h-5 rounded bg-slate-100 text-slate-700 flex items-center justify-center">
+                <i class="ph-fill ph-guitar"></i>
+              </span>
+              <span>Atlantic Groove Band</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de estadísticas y red -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-semibold text-gray-800">
+            <span>Panel de músico</span>
+            <i class="ph ph-caret-right text-gray-400"></i>
+          </div>
+
+          <button onclick="filterFeed('musician')" class="w-full flex items-center justify-between text-left py-1 hover:bg-gray-50 rounded px-1 transition">
+            <div>
+              <p class="text-xs font-medium text-gray-700">Músicos en tu red</p>
+              <p class="text-[11px] text-gray-400">Amplía tus contactos locales</p>
+            </div>
+            <span class="text-xs font-bold text-brand-600">28</span>
+          </button>
+
+          <button onclick="filterFeed('band')" class="w-full flex items-center justify-between text-left py-1 hover:bg-gray-50 rounded px-1 transition">
+            <div>
+              <p class="text-xs font-medium text-gray-700">Invitaciones a ensayos</p>
+              <p class="text-[11px] text-gray-400">2 bandas buscan guitarra</p>
+            </div>
+            <span class="text-xs font-bold text-brand-600">3</span>
+          </button>
+        </div>
+
+        <!-- Tarjeta de accesos rápidos / Guardados -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs hidden md:block">
+          <p class="text-[11px] text-gray-500 mb-2">Herramientas para tu banda</p>
+          <button onclick="openCreateModal('band')" class="w-full flex items-center gap-2 text-xs font-semibold text-gray-800 hover:text-brand-600 py-1.5 transition">
+            <i class="ph-fill ph-plus-circle text-amber-500 text-base"></i>
+            <span>Publicar audición urgente</span>
+          </button>
+          <button onclick="showToast('Mostrando tus 4 audiciones guardadas')" class="w-full flex items-center gap-2 text-xs font-semibold text-gray-800 hover:text-brand-600 py-1.5 transition">
+            <i class="ph-fill ph-bookmark-simple text-gray-600 text-base"></i>
+            <span>Audiciones guardadas (4)</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- -------------------------------------------------------------------
+           COLUMNA CENTRAL: BANNER DE ACCIÓN + CREAR POST + FEED (6 columnas)
+           ------------------------------------------------------------------- -->
+      <section class="md:col-span-8 lg:col-span-6 space-y-3">
+
+        <!-- Tarjeta superior de bienvenida / pregunta rápida (como en la captura) -->
+        <div id="welcomeCard" class="bg-white rounded-xl border border-gray-200 p-5 text-center relative shadow-2xs">
+          <button onclick="document.getElementById('welcomeCard').remove()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition" title="Cerrar sugerencia">
+            <i class="ph ph-x text-lg"></i>
+          </button>
+
+          <!-- Ilustración SVG limpia de músicos colaborando -->
+          <div class="w-24 h-20 mx-auto mb-2 flex items-center justify-center">
+            <svg viewBox="0 0 160 110" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="80" cy="55" r="46" fill="#EDF3F8"/>
+              <!-- Ondas musicales -->
+              <path d="M35 38C40 30 48 30 53 38" stroke="#0A66C2" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M108 32C114 25 122 25 127 32" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- Guitarra estilizada -->
+              <rect x="64" y="22" width="6" height="44" rx="3" transform="rotate(25 64 22)" fill="#1E293B"/>
+              <ellipse cx="52" cy="70" rx="15" ry="12" transform="rotate(25 52 70)" fill="#0A66C2"/>
+              <circle cx="52" cy="70" r="4" fill="#FFFFFF"/>
+              <!-- Nota musical -->
+              <path d="M104 46V74M104 46L122 41V69" stroke="#0F172A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="99" cy="74" r="6" fill="#F59E0B"/>
+              <circle cx="117" cy="69" r="6" fill="#F59E0B"/>
+            </svg>
+          </div>
+
+          <h2 class="text-lg font-bold text-gray-900">¡Hola, Manuel! ¿Buscas banda o músicos para un bolo?</h2>
+          <p class="text-xs text-gray-500 mt-1">Filtra el tablón o publica un aviso rápido para encontrar compañeros de escenario.</p>
+
+          <!-- Dos botones píldora principales como en la imagen -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
+            <button 
+              onclick="filterFeed('band')" 
+              class="w-full py-2 px-4 rounded-full border border-brand-600 text-brand-600 font-semibold text-sm hover:bg-brand-50 transition"
+            >
+              Busco banda / bolo
+            </button>
+            <button 
+              onclick="openCreateModal('band')" 
+              class="w-full py-2 px-4 rounded-full border border-brand-600 text-brand-600 font-semibold text-sm hover:bg-brand-50 transition"
+            >
+              Busco músicos
+            </button>
+          </div>
+        </div>
+
+        <!-- Caja para crear publicación / oferta -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <img 
+              src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=120&q=80" 
+              onerror="this.src='https://placehold.co/80x80/0a66c2/ffffff?text=M'"
+              alt="Manuel" 
+              class="w-11 h-11 rounded-full object-cover shrink-0 border border-gray-200"
+            >
+            <button 
+              onclick="openCreateModal('band')" 
+              class="flex-1 text-left px-4 py-2.5 rounded-full border border-gray-300 hover:bg-gray-100 text-sm font-medium text-gray-500 transition"
+            >
+              Publicar audición, buscar músico o compartir ensayo...
+            </button>
+          </div>
+
+          <!-- Botones de acción rápida inferiores -->
+          <div class="flex items-center justify-around pt-2.5 mt-2.5 border-t border-gray-100">
+            <button onclick="openCreateModal('demo')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-semibold text-gray-600 transition">
+              <i class="ph-fill ph-waveform text-emerald-600 text-lg"></i>
+              <span>Audio / Demo</span>
+            </button>
+            <button onclick="openCreateModal('demo')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-semibold text-gray-600 transition">
+              <i class="ph-fill ph-video-camera text-blue-600 text-lg"></i>
+              <span>Vídeo ensayo</span>
+            </button>
+            <button onclick="openCreateModal('band')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-semibold text-gray-600 transition">
+              <i class="ph-fill ph-megaphone text-amber-600 text-lg"></i>
+              <span>Crear audición</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra divisoria / Filtros del feed -->
+        <div class="flex flex-wrap items-center justify-between gap-2 px-1 py-0.5">
+          <div class="flex items-center gap-1.5 overflow-x-auto">
+            <button onclick="filterFeed('all')" data-filter="all" class="filter-pill active bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full transition">
+              Todos
+            </button>
+            <button onclick="filterFeed('band')" data-filter="band" class="filter-pill bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 text-xs font-semibold px-3 py-1 rounded-full transition">
+              Buscan músico
+            </button>
+            <button onclick="filterFeed('musician')" data-filter="musician" class="filter-pill bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 text-xs font-semibold px-3 py-1 rounded-full transition">
+              Músicos disponibles
+            </button>
+           
+          </div>
+          <span id="feedCounter" class="text-[11px] text-gray-500">Mostrando 3 publicaciones</span>
+        </div>
+
+        <!-- Contenedor dinámico de tarjetas del Feed -->
+        <div id="feedContainer" class="space-y-3">
+          <!-- Las tarjetas se renderizan desde JavaScript para facilitar edición y filtrado -->
+        </div>
+
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           COLUMNA DERECHA: NOTICIAS MUSICALES Y AUDICIONES URGENTES (3 cols)
+           ------------------------------------------------------------------- -->
+      <aside class="hidden lg:block lg:col-span-3 space-y-3">
+        
+        <!-- Tarjeta 1: Escena & Noticias Musicales (equivalente a LinkedIn Noticias) -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="font-bold text-sm text-gray-900">Escena & Noticias</h2>
+            <i class="ph-fill ph-info text-gray-500 text-sm" title="Actualidad de bandas, salas y contratación"></i>
+          </div>
+          <p class="text-xs font-semibold text-gray-500 mb-2.5">Historias destacadas</p>
+
+          <ul class="space-y-2.5">
+            <li class="group cursor-pointer" onclick="showToast('Abriendo artículo: Alta demanda de metales y percusión')">
+              <p class="text-xs font-semibold text-gray-800 group-hover:text-brand-600 leading-snug transition">
+                Temporada de festivales: alta demanda de metales y percusión
+              </p>
+              <span class="text-[11px] text-gray-400">Hace 4 horas • 940 músicos leyendo</span>
+            </li>
+            <li class="group cursor-pointer" onclick="showToast('Abriendo artículo: Tarifas estándar para sustituciones')">
+              <p class="text-xs font-semibold text-gray-800 group-hover:text-brand-600 leading-snug transition">
+                Guía de cachés para bolos y sustituciones de última hora
+              </p>
+              <span class="text-[11px] text-gray-400">Hace 9 horas • 612 lectores</span>
+            </li>
+            <li class="group cursor-pointer" onclick="showToast('Abriendo artículo: Salas de ensayo con grabación multipista')">
+              <p class="text-xs font-semibold text-gray-800 group-hover:text-brand-600 leading-snug transition">
+                Nuevas salas de ensayo con grabación directa en Galicia
+              </p>
+              <span class="text-[11px] text-gray-400">Hace 1 día • 418 lectores</span>
+            </li>
+            <li class="group cursor-pointer" onclick="showToast('Abriendo artículo: Contratos técnicos y riders')">
+              <p class="text-xs font-semibold text-gray-800 group-hover:text-brand-600 leading-snug transition">
+                Cómo preparar un rider técnico claro para salas pequeñas
+              </p>
+              <span class="text-[11px] text-gray-400">Hace 2 días • 305 lectores</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tarjeta 2: Audiciones urgentes de hoy (equivalente a "Las partidas de hoy") -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-2xs">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-bold text-sm text-gray-900">Audiciones urgentes hoy</h2>
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">Activas</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <!-- Audición rápida 1 -->
+            <button onclick="openApplyModal('Bajista para gira Indie/Rock', 'Los Faros del Norte', 'Vigo • 180€/bolo')" class="w-full flex items-center justify-between gap-2.5 p-1.5 rounded-lg hover:bg-gray-50 text-left group transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold">
+                  <i class="ph-fill ph-music-notes text-lg"></i>
+                </div>
+                <div class="truncate">
+                  <p class="text-xs font-bold text-gray-900 truncate group-hover:text-brand-600">Bajista • Indie / Rock</p>
+                  <p class="text-[11px] text-gray-500 truncate">Vigo • 180€/bolo</p>
+                </div>
+              </div>
+              <i class="ph ph-caret-right text-gray-400 group-hover:translate-x-0.5 transition"></i>
+            </button>
+
+            <!-- Audición rápida 2 -->
+            <button onclick="openApplyModal('Cantante principal femenina', 'Orquesta Horizonte', 'Pontevedra • Temporada')" class="w-full flex items-center justify-between gap-2.5 p-1.5 rounded-lg hover:bg-gray-50 text-left group transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 text-brand-600 flex items-center justify-center shrink-0 font-bold">
+                  <i class="ph-fill ph-microphone text-lg"></i>
+                </div>
+                <div class="truncate">
+                  <p class="text-xs font-bold text-gray-900 truncate group-hover:text-brand-600">Voz principal • Orquesta</p>
+                  <p class="text-[11px] text-gray-500 truncate">Pontevedra • Contrato fijo</p>
+                </div>
+              </div>
+              <i class="ph ph-caret-right text-gray-400 group-hover:translate-x-0.5 transition"></i>
+            </button>
+
+            <!-- Audición rápida 3 -->
+            <button onclick="openApplyModal('Batería suplente fin de semana', 'Soul & Funk Collective', 'A Coruña • 150€/bolo')" class="w-full flex items-center justify-between gap-2.5 p-1.5 rounded-lg hover:bg-gray-50 text-left group transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
+                  <i class="ph-fill ph-metronome text-lg"></i>
+                </div>
+                <div class="truncate">
+                  <p class="text-xs font-bold text-gray-900 truncate group-hover:text-brand-600">Batería • Funk / Soul</p>
+                  <p class="text-[11px] text-gray-500 truncate">A Coruña • Este sábado</p>
+                </div>
+              </div>
+              <i class="ph ph-caret-right text-gray-400 group-hover:translate-x-0.5 transition"></i>
+            </button>
+
+            <!-- Audición rápida 4 -->
+            <button onclick="openApplyModal('Teclista con sintetizadores', 'Neon Waves', 'Santiago • Gira salas')" class="w-full flex items-center justify-between gap-2.5 p-1.5 rounded-lg hover:bg-gray-50 text-left group transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold">
+                  <i class="ph-fill ph-piano-keys text-lg"></i>
+                </div>
+                <div class="truncate">
+                  <p class="text-xs font-bold text-gray-900 truncate group-hover:text-brand-600">Teclista • Synth-Pop</p>
+                  <p class="text-[11px] text-gray-500 truncate">Santiago • 140€/bolo</p>
+                </div>
+              </div>
+              <i class="ph ph-caret-right text-gray-400 group-hover:translate-x-0.5 transition"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pie de página compacto -->
+        <footer class="px-2 text-[11px] text-gray-400 flex flex-wrap gap-x-3 gap-y-1 justify-center">
+          <a href="#" onclick="return false;" class="hover:underline">Acerca de BandLink</a>
+          <a href="#" onclick="return false;" class="hover:underline">Contratos tipo</a>
+          <a href="#" onclick="return false;" class="hover:underline">Salas asociadas</a>
+          <span>BandLink © 2026</span>
+        </footer>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       3. CAJÓN FLOTANTE DE MENSAJES (ESQUINA INFERIOR DERECHA COMO EN CAPTURA)
+       ===================================================================== -->
+ 
+
+  <!-- =====================================================================
+       4. MODALES INTERACTIVOS (CREAR PUBLICACIÓN Y POSTULARSE)
+       ===================================================================== -->
+
+  <!-- Modal: Crear Nueva Publicación / Audición -->
+  <div id="createModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="font-bold text-base text-gray-900">Crear publicación o audición</h3>
+        <button onclick="closeModal('createModal')" class="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreatePost(event)" class="p-5 space-y-3.5 text-sm">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tipo de anuncio</label>
+          <select id="postCategory" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none">
+            <option value="band">Busco músico para mi banda / bolo</option>
+            <option value="musician">Me ofrezco como músico / sustituciones</option>
+            <option value="demo">Compartir ensayo / demo musical</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Instrumento o rol</label>
+            <input id="postInstrument" type="text" required placeholder="Ej. Bajista, Saxofonista..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Ciudad / Zona</label>
+            <input id="postLocation" type="text" required placeholder="Ej. Pontevedra, Vigo..." value="Pontevedra" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Estilo musical</label>
+            <input id="postGenre" type="text" required placeholder="Ej. Rock, Funk, Orquesta" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Remuneración / Condiciones</label>
+            <input id="postPay" type="text" placeholder="Ej. 150€/bolo o Proyecto propio" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Descripción detallada</label>
+          <textarea id="postContent" rows="3" required placeholder="Describe el proyecto, fechas de bolos, nivel requerido o enlace a repertorio..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+          <button type="button" onclick="closeModal('createModal')" class="px-4 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-full text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-xs transition">
+            Publicar ahora
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Detalle / Postularme a una oferta -->
+  <div id="applyModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="font-bold text-base text-gray-900">Enviar candidatura / Contactar</h3>
+        <button onclick="closeModal('applyModal')" class="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitApplication(event)" class="p-5 space-y-3.5">
+        <div class="bg-brand-50/70 border border-brand-100 rounded-xl p-3">
+          <p id="applyRoleTitle" class="text-sm font-bold text-gray-900">Bajista • Rock Alternativo</p>
+          <p id="applyBandMeta" class="text-xs text-gray-600 mt-0.5">Los Faros del Norte • Vigo • 180€/bolo</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tu perfil adjunto</label>
+          <div class="flex items-center gap-2.5 p-2.5 border border-gray-200 rounded-lg bg-gray-50">
+            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=100&q=80" onerror="this.src='https://placehold.co/60x60/0a66c2/ffffff?text=M'" class="w-9 h-9 rounded-full object-cover" alt="Manuel">
+            <div>
+              <p class="text-xs font-bold text-gray-900">Manuel Fernández</p>
+              <p class="text-[11px] text-gray-500">Guitarrista rítmico & Productor • 3 demos adjuntas</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Nota breve para la banda</label>
+          <textarea id="applyNote" rows="3" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:border-brand-600 focus:outline-none">Hola, tengo equipo propio, experiencia en directo y disponibilidad para ensayar esta semana. Os dejo mi demo en el perfil.</textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('applyModal')" class="px-4 py-2 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100">
+            Cerrar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-full text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white transition">
+            Enviar candidatura
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast de notificación flotante -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 flex items-center gap-2">
+    <i class="ph-fill ph-check-circle text-emerald-400 text-base"></i>
+    <span id="toastText">Acción completada</span>
+  </div>
+
+  <!-- =====================================================================
+       5. JAVASCRIPT PURO (DATOS DEL FEED E INTERACTIVIDAD)
+       ===================================================================== -->
+  <script>
+    // Datos iniciales del feed (puedes editar o ampliar este array fácilmente)
+    let postsData = [
+      {
+        id: 1,
+        category: 'band', // 'band' | 'musician' | 'demo'
+        author: 'La Ruta del Norte',
+        role: 'Banda de Rock & Pop Español • 12 fechas confirmadas este verano',
+        avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=120&q=80',
+        time: 'Hace 2 h',
+        location: 'Pontevedra / Vigo',
+        instrument: 'Batería',
+        genre: 'Pop-Rock',
+        pay: '180€ / bolo + dietas',
+        badgeText: 'Se busca músico',
+        badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+        content: 'Buscamos batería con buen metrónomo y disponibilidad de fines de semana para cerrar gira de salas y fiestas en Galicia. Repertorio ya montado (25 temas) y local de ensayo propio en Pontevedra.',
+        hasAudio: false,
+        image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80',
+        likes: 24,
+        liked: false,
+        comments: 6
+      },
+      {
+        id: 2,
+        category: 'musician',
+        author: 'Elena Salgado',
+        role: 'Saxofonista Tenor/Alto & Teclista • Conservatorio Superior',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+        time: 'Hace 5 h',
+        location: 'A Coruña y desplazamientos',
+        instrument: 'Saxofón / Teclado',
+        genre: 'Funk, Soul & Orquesta',
+        pay: 'Disponible para bolos y grabaciones',
+        badgeText: 'Músico disponible',
+        badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        content: 'Abierta a sustituciones de última hora, colaboraciones en estudio o proyectos estables de Funk, Soul y eventos. Lectura a primera vista, equipo inalámbrico propio y vehículo.',
+        hasAudio: true,
+        audioTitle: 'Solo Saxo Tenor - Sesión en vivo (Funk Groove 112 BPM)',
+        audioDuration: '01:24',
+        image: null,
+        likes: 41,
+        liked: false,
+        comments: 9
+      },
+      {
+        id: 3,
+        category: 'demo',
+        author: 'Gabriel Fontán',
+        role: 'Bajista & Técnico de directo • Buscando proyecto Indie/Alternativo',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+        time: 'Ayer',
+        location: 'Ourense / Vigo',
+        instrument: 'Bajo eléctrico',
+        genre: 'Indie / Alternativo',
+        pay: 'Proyecto original o tributo',
+        badgeText: 'Ensayo & Demo',
+        badgeColor: 'bg-blue-50 text-brand-700 border-blue-200',
+        content: 'Os dejo un corte de nuestro último ensayo preparando el setlist de otoño. Si alguna banda busca bajista con sintetizador de bajo y coros, ¡escribidme sin compromiso!',
+        hasAudio: true,
+        audioTitle: 'Ensayo General - Línea de Bajo & Synth (Demo)',
+        audioDuration: '02:05',
+        image: null,
+        likes: 19,
+        liked: false,
+        comments: 4
+      }
+    ];
+
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    // Renderizar todas las tarjetas del feed según filtros actuales
+    function renderFeed() {
+      const container = document.getElementById('feedContainer');
+      const counter = document.getElementById('feedCounter');
+
+      const filtered = postsData.filter(post => {
+        const matchesCategory = currentFilter === 'all' || post.category === currentFilter;
+        const query = currentSearch.toLowerCase().trim();
+        const matchesSearch = !query || 
+          post.author.toLowerCase().includes(query) ||
+          post.instrument.toLowerCase().includes(query) ||
+          post.genre.toLowerCase().includes(query) ||
+          post.location.toLowerCase().includes(query) ||
+          post.content.toLowerCase().includes(query);
+        return matchesCategory && matchesSearch;
+      });
+
+      counter.textContent = `Mostrando ${filtered.length} ${filtered.length === 1 ? 'publicación' : 'publicaciones'}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <i class="ph ph-music-notes-simple text-4xl text-gray-300 mb-2"></i>
+            <p class="text-sm font-semibold text-gray-700">No encontramos músicos o bandas con ese filtro</p>
+            <p class="text-xs text-gray-500 mt-1">Prueba con otro instrumento, ciudad o limpia la búsqueda.</p>
+            <button onclick="resetFilters()" class="mt-3 px-4 py-1.5 rounded-full bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 transition">
+              Ver todo el tablón
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(post => `
+        <article class="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden transition hover:border-gray-300">
+          <!-- Cabecera de tarjeta -->
+          <div class="p-4 pb-2 flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <img 
+                src="${post.avatar}" 
+                onerror="this.src='https://placehold.co/80x80/1e293b/ffffff?text=${post.author.charAt(0)}'"
+                alt="${post.author}" 
+                class="w-11 h-11 rounded-full object-cover border border-gray-200 shrink-0"
+              >
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <h3 class="font-bold text-sm text-gray-900 hover:text-brand-600 cursor-pointer">${post.author}</h3>
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border ${post.badgeColor}">
+                    ${post.badgeText}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-500 line-clamp-1">${post.role}</p>
+                <p class="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                  <span>${post.time}</span> • <i class="ph-fill ph-map-pin"></i> <span>${post.location}</span>
+                </p>
+              </div>
+            </div>
+
+            <button onclick="openChatWith('${post.author.replace(/'/g, "\\'")}', '${post.instrument}')" class="text-xs font-semibold text-brand-600 hover:bg-brand-50 px-2.5 py-1 rounded-full transition shrink-0">
+              + Contactar
+            </button>
+          </div>
+
+          <!-- Etiquetas musicales clave -->
+          <div class="px-4 py-1.5 flex flex-wrap gap-1.5">
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-md">
+              <i class="ph-fill ph-guitar text-brand-600"></i> ${post.instrument}
+            </span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-md">
+              <i class="ph-fill ph-disc text-gray-600"></i> ${post.genre}
+            </span>
+            ${post.pay ? `
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-md">
+                <i class="ph-fill ph-currency-eur"></i> ${post.pay}
+              </span>
+            ` : ''}
+          </div>
+
+          <!-- Texto de la publicación -->
+          <div class="px-4 py-2 text-sm text-gray-800 leading-relaxed">
+            ${post.content}
+          </div>
+
+          <!-- Reproductor de Demo Audio simulado (si aplica) -->
+          ${post.hasAudio ? `
+            <div class="mx-4 my-2 p-3 rounded-xl bg-slate-900 text-white flex items-center justify-between gap-3">
+              <button onclick="toggleAudioPlayer(this)" class="w-9 h-9 rounded-full bg-brand-600 hover:bg-brand-500 text-white flex items-center justify-center shrink-0 transition" title="Escuchar demo">
+                <i class="ph-fill ph-play text-base ml-0.5"></i>
+              </button>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold truncate">${post.audioTitle}</p>
+                <div class="flex items-end gap-1 h-4 mt-1.5 eq-container">
+                  <span class="eq-bar w-1 h-full bg-brand-400 rounded-full"></span>
+                  <span class="eq-bar w-1 h-3/4 bg-brand-400 rounded-full"></span>
+                  <span class="eq-bar w-1 h-full bg-amber-400 rounded-full"></span>
+                  <span class="eq-bar w-1 h-2/3 bg-brand-400 rounded-full"></span>
+                  <span class="eq-bar w-1 h-full bg-emerald-400 rounded-full"></span>
+                  <div class="flex-1 h-1 bg-slate-700 rounded-full ml-2 self-center overflow-hidden">
+                    <div class="w-1/3 h-full bg-brand-400"></div>
+                  </div>
+                </div>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono">${post.audioDuration}</span>
+            </div>
+          ` : ''}
+
+          <!-- Imagen opcional de banda / directo -->
+          ${post.image ? `
+            <div class="mt-2 bg-gray-100 max-h-72 overflow-hidden">
+              <img 
+                src="${post.image}" 
+                onerror="this.style.display='none'"
+                alt="Directo musical" 
+                class="w-full h-64 object-cover"
+              >
+            </div>
+          ` : ''}
+
+          <!-- Contadores de interacción -->
+          <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+            <span class="flex items-center gap-1">
+              <span class="w-4 h-4 rounded-full bg-brand-600 text-white inline-flex items-center justify-center text-[9px]">
+                <i class="ph-fill ph-thumbs-up"></i>
+              </span>
+              ${post.likes} músicos interesados
+            </span>
+            <span>${post.comments} comentarios</span>
+          </div>
+
+          <!-- Botones de acción inferiores -->
+          <div class="px-2 py-1.5 flex items-center justify-between gap-1">
+            <button onclick="toggleLike(${post.id})" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-xs font-semibold ${post.liked ? 'text-brand-600' : 'text-gray-600'} transition">
+              <i class="${post.liked ? 'ph-fill' : 'ph'} ph-thumbs-up text-base"></i>
+              <span>Me interesa</span>
+            </button>
+
+            <button onclick="openChatWith('${post.author.replace(/'/g, "\\'")}', '${post.instrument}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-xs font-semibold text-gray-600 transition">
+              <i class="ph ph-chat-circle-text text-base"></i>
+              <span>Mensaje</span>
+            </button>
+
+            <button onclick="openApplyModal('${post.instrument} • ${post.genre}', '${post.author}', '${post.location} • ${post.pay}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-brand-50 hover:bg-brand-100 text-xs font-bold text-brand-600 transition">
+              <i class="ph-fill ph-paper-plane-tilt text-base"></i>
+              <span>${post.category === 'band' ? 'Postularme' : 'Contratar'}</span>
+            </button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // Filtrado por categoría
+    function filterFeed(category) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        if (btn.dataset.filter === category) {
+          btn.className = 'filter-pill active bg-gray-900 text-white text-xs font-semibold px-3 py-1 rounded-full transition';
+        } else {
+          btn.className = 'filter-pill bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 text-xs font-semibold px-3 py-1 rounded-full transition';
+        }
+      });
+      renderFeed();
+    }
+
+    // Buscador superior en tiempo real
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      clearSearchBtn.classList.toggle('hidden', !currentSearch);
+      renderFeed();
+    });
+
+    function clearSearch() {
+      searchInput.value = '';
+      currentSearch = '';
+      clearSearchBtn.classList.add('hidden');
+      renderFeed();
+    }
+
+    function resetFilters() {
+      clearSearch();
+      filterFeed('all');
+    }
+
+    // Navegación superior activa
+    function setActiveNav(el, filter) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('border-gray-900', 'text-gray-900');
+        item.classList.add('border-transparent', 'text-gray-500');
+      });
+      el.classList.remove('border-transparent', 'text-gray-500');
+      el.classList.add('border-gray-900', 'text-gray-900');
+      if (filter) filterFeed(filter);
+    }
+
+    // Dar "Me interesa"
+    function toggleLike(id) {
+      const post = postsData.find(p => p.id === id);
+      if (!post) return;
+      post.liked = !post.liked;
+      post.likes += post.liked ? 1 : -1;
+      renderFeed();
+    }
+
+    // Simulación de reproductor de audio
+    function toggleAudioPlayer(btn) {
+      const card = btn.closest('div');
+      const icon = btn.querySelector('i');
+      const isPlaying = card.classList.toggle('playing');
+      icon.className = isPlaying ? 'ph-fill ph-pause text-base' : 'ph-fill ph-play text-base ml-0.5';
+    }
+
+    // Gestión de Modales
+    function openCreateModal(defaultCategory = 'band') {
+      document.getElementById('postCategory').value = defaultCategory;
+      document.getElementById('createModal').classList.remove('hidden');
+    }
+
+    function openApplyModal(roleTitle, bandName, meta) {
+      document.getElementById('applyRoleTitle').textContent = roleTitle;
+      document.getElementById('applyBandMeta').textContent = `${bandName} • ${meta}`;
+      document.getElementById('applyModal').classList.remove('hidden');
+    }
+
+    function openProfileModal() {
+      showToast('Perfil activo: Manuel Fernández (Guitarrista rítmico • Pontevedra)');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // Crear nueva publicación dinámicamente
+    function handleCreatePost(e) {
+      e.preventDefault();
+      const category = document.getElementById('postCategory').value;
+      const instrument = document.getElementById('postInstrument').value.trim();
+      const location = document.getElementById('postLocation').value.trim();
+      const genre = document.getElementById('postGenre').value.trim();
+      const pay = document.getElementById('postPay').value.trim() || 'A convenir';
+      const content = document.getElementById('postContent').value.trim();
+
+      const badgeMap = {
+        band: { text: 'Se busca músico', color: 'bg-amber-50 text-amber-800 border-amber-200' },
+        musician: { text: 'Músico disponible', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+        demo: { text: 'Ensayo & Demo', color: 'bg-blue-50 text-brand-700 border-blue-200' }
+      };
+
+      const newPost = {
+        id: Date.now(),
+        category,
+        author: 'Manuel Fernández',
+        role: 'Guitarrista rítmico & Productor • Atlantic Groove Band',
+        avatar: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=120&q=80',
+        time: 'Ahora mismo',
+        location,
+        instrument,
+        genre,
+        pay,
+        badgeText: badgeMap[category].text,
+        badgeColor: badgeMap[category].color,
+        content,
+        hasAudio: category === 'demo',
+        audioTitle: `Demo de ${instrument} (${genre}) - Manuel Fernández`,
+        audioDuration: '01:15',
+        image: null,
+        likes: 1,
+        liked: true,
+        comments: 0
+      };
+
+      postsData.unshift(newPost);
+      e.target.reset();
+      document.getElementById('postLocation').value = 'Pontevedra';
+      closeModal('createModal');
+      filterFeed('all');
+      showToast('¡Tu anuncio musical ya está publicado en el tablón!');
+    }
+
+    // Enviar candidatura
+    function submitApplication(e) {
+      e.preventDefault();
+      closeModal('applyModal');
+      showToast('¡Candidatura enviada! La banda recibirá tu perfil y demos.');
+    }
+
+    // Cajón flotante de mensajes
+    function toggleChatDrawer(forceOpen = null) {
+      const body = document.getElementById('chatBody');
+      const chevron = document.getElementById('chatChevron');
+      const shouldOpen = forceOpen !== null ? forceOpen : body.classList.contains('hidden');
+
+      if (shouldOpen) {
+        body.classList.remove('hidden');
+        body.classList.add('flex');
+        chevron.classList.add('rotate-180');
+      } else {
+        body.classList.add('hidden');
+        body.classList.remove('flex');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    function openChatWith(name, instrument) {
+      document.getElementById('chatContactName').textContent = `${name} (${instrument})`;
+      const messages = document.getElementById('chatMessages');
+      messages.innerHTML = `
+        <div class="bg-gray-100 text-gray-800 p-2.5 rounded-xl rounded-tl-none max-w-[85%]">
+          ¡Hola Manuel! Has iniciado conversación con <strong>${name}</strong> sobre <em>${instrument}</em>.
+        </div>
+      `;
+      toggleChatDrawer(true);
+      document.getElementById('chatInput').focus();
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const messages = document.getElementById('chatMessages');
+      const bubble = document.createElement('div');
+      bubble.className = 'bg-brand-600 text-white p-2.5 rounded-xl rounded-tr-none max-w-[85%] ml-auto';
+      bubble.textContent = text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+      input.value = '';
+    }
+
+    // Notificación visual tipo Toast
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = message;
+      toast.classList.remove('opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0');
+      }, 3200);
+    }
+
+    // Inicializar feed al cargar
+    document.addEventListener('DOMContentLoaded', renderFeed);
+  </script>
+</body>
+</html>
