@@ -29,6 +29,52 @@
       min-width: 0;
     }
 
+    .post-author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .post-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Fila inferior con detalles a la izquierda y botón Contactar a la derecha */
+    .post-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .post-footer-row .post-details {
+      margin-bottom: 0;
+    }
+
+    .post-footer-row .btn-solicitar {
+      margin-left: auto;
+    }
+
     .user-avatar-sm {
       width: 38px;
       height: 38px;
@@ -329,6 +375,14 @@
       background: #fff;
     }
 
+    .composer-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 14px;
+      letter-spacing: -0.3px;
+    }
+
     .composer textarea {
       resize: vertical;
       min-height: 75px;
@@ -570,7 +624,9 @@
         <div class="profile-header">
           <div class="avatar" id="my-avatar">?</div>
           <span class="badge-type" id="my-type">Usuario</span>
-          <div class="profile-name" id="my-name">Cargando...</div>
+          <div class="profile-name">
+            <a href="info.html" id="my-name" style="color: inherit; text-decoration: none;">Cargando...</a>
+          </div>
           <div class="profile-meta" id="my-meta"></div>
         </div>
         <p style="font-size: 13px; color: var(--muted); text-align: center;">
@@ -617,6 +673,7 @@
 
       <!-- Formulario para crear publicación (EXCLUSIVO PARA BANDAS) -->
       <div class="card composer" id="composer-card" style="display: none;">
+        <h2 class="composer-title">Crear anuncio</h2>
         <form onsubmit="createPost(event)">
           <div class="composer-grid">
             <input type="text" id="post-banda" placeholder="Nombre de la banda" required />
@@ -643,12 +700,14 @@
           <div class="composer-grid">
             <input type="text" id="post-ciudad" placeholder="Ciudad (ej. A Coruña)" required />
             <input type="date" id="post-fecha" title="Fecha de actuación (opcional)" />
-            <input type="text" id="post-salario" placeholder="Salario (ej. 150 € o A convenir)" />
-            <input type="tel" id="post-telefono" placeholder="Teléfono de contacto (ej. 600123456)" required />
+            <input type="text" id="post-salario" placeholder="Salario (ej. 50 € o A negociar)" />
+            <input type="tel" id="post-telefono" placeholder="Teléfono de contacto " required />
           </div>
 
           <div class="composer-footer">
-            <span style="font-size: 12px; color: var(--muted);">Publicando oferta como banda</span>
+            <span style="font-size: 12px; color: var(--muted);" id="publishing-as">
+              Publicando oferta como...
+            </span>
             <button type="submit" class="btn-primary" id="btn-publish">Publicar oferta</button>
           </div>
         </form>
@@ -692,6 +751,7 @@
     let allUsers = [];
     let currentFilter = "Todos";
 
+
     // Inicializar página
     window.addEventListener("DOMContentLoaded", async () => {
       const rawSession = localStorage.getItem("bandlink_session");
@@ -718,7 +778,7 @@
       document.getElementById("my-name").textContent = session.name || "Invitado";
       document.getElementById("my-avatar").textContent = (session.name || "?").charAt(0).toUpperCase();
       document.getElementById("my-meta").textContent = `${session.role} · ${session.city}`;
-
+      document.getElementById("post-telefono").value = session.telefono || "";
       const typeLabel =
         session.accountType === "banda"
           ? "Banda"
@@ -737,6 +797,14 @@
       } else {
         document.getElementById("guest-banner").style.display = "flex";
       }
+
+      if (session.accountType === "banda" && !session.isGuest) {
+        document.getElementById("composer-card").style.display = "block";
+        document.getElementById("post-ciudad").value = session.city || "";
+        document.getElementById("post-banda").value = session.name || "";
+        document.getElementById("publishing-as").innerHTML =
+          `Publicando oferta como <strong>${escapeHtml(session.name)}</strong>`;
+      }
     }
 
     // Cargar usuarios reales desde Supabase
@@ -754,7 +822,19 @@
         return;
       }
 
+
+
+
       allUsers = data || [];
+      // Dentro de loadUsers(), justo después de: allUsers = data || [];
+      if (session && session.accountType === "banda" && session.id) {
+        const miBanda = allUsers.find((u) => u.id === session.id);
+        if (miBanda && miBanda.telefono) {
+          document.getElementById("post-telefono").value = miBanda.telefono;
+          session.telefono = miBanda.telefono;
+          localStorage.setItem("bandlink_session", JSON.stringify(session));
+        }
+      }
       document.getElementById("users-count").textContent = allUsers.length;
       renderUsers();
     }
@@ -784,7 +864,7 @@
       container.innerHTML = filteredUsers
         .map((u) => {
           const etiquetaRol =
-            u.especialidad || (u.tipo_cuenta === "banda" ? "Banda" : "Músico");
+            u.instrumento || (u.tipo_cuenta === "banda" ? "Banda" : "Músico");
           const detalleModal = `${etiquetaRol} · ${u.ciudad || "Sin ciudad"}\\nCorreo: ${u.email || "No disponible"}`;
           const inicial = (u.nombre || "?").charAt(0).toUpperCase();
 
@@ -802,9 +882,9 @@
               <p>${escapeHtml(etiquetaRol)} · ${escapeHtml(u.ciudad || "")}</p>
             </div>
           </div>
-          <button class="btn-small" onclick="openContact('${escapeHtml(u.nombre)}', '${detalleModal}')">
-            Ver
-          </button>
+         <button class="btn-small" onclick="window.location.href='info.html?id=${u.id}'">
+  Ver
+      </button>
         </div>
       `;
         })
@@ -933,36 +1013,58 @@
             })
             : "Fecha flexible / banda fija";
 
+          // Buscar foto de perfil de la banda en los usuarios cargados
+          const bandaUsuario = allUsers.find(
+            (u) =>
+              (p.autor_id && u.id === p.autor_id) ||
+              (u.nombre && p.nombre_banda && u.nombre.toLowerCase() === p.nombre_banda.toLowerCase())
+          );
+          const fotoUrl = p.foto_url || (bandaUsuario ? bandaUsuario.foto_url : null);
+          const inicialBanda = (p.nombre_banda || "?").charAt(0).toUpperCase();
+
+          const avatarPostHtml = fotoUrl
+            ? `<div class="post-avatar"><img src="${escapeHtml(fotoUrl)}" alt="${escapeHtml(p.nombre_banda)}" onerror="this.parentElement.textContent='${inicialBanda}'" /></div>`
+            : `<div class="post-avatar">${inicialBanda}</div>`;
+
+          const correoBanda = p.correo || (bandaUsuario ? bandaUsuario.email : "");
+          const infoContacto = correoBanda
+            ? `Teléfono de contacto: ${escapeHtml(p.telefono)}\\n· Correo: ${escapeHtml(correoBanda)}`
+            : `Teléfono de contacto: ${escapeHtml(p.telefono)}`;
+
           return `
-            <article class="card">
-              <div class="post-header">
-                <div>
-                  <div class="post-author">${escapeHtml(p.nombre_banda)}</div>
-                  <div class="post-sub">${escapeHtml(p.ciudad)} · Publicado el ${fechaPublicacion}</div>
-                </div>
-                <span class="post-tag">Se busca: ${escapeHtml(p.instrumento_requerido)}</span>
+        <article class="card">
+          <div class="post-header">
+            <div class="post-author-wrap">
+              ${avatarPostHtml}
+              <div>
+                <div class="post-author">${escapeHtml(p.nombre_banda)}</div>
+                <div class="post-sub">${escapeHtml(p.ciudad)} · Publicado el ${fechaPublicacion}</div>
               </div>
+            </div>
+            <span class="post-tag">Se busca: ${escapeHtml(p.instrumento_requerido)}</span>
+          </div>
 
-              <h3 class="post-title">${escapeHtml(p.titulo)}</h3>
-              <p class="post-body">${escapeHtml(p.informacion)}</p>
+          <h3 class="post-title">${escapeHtml(p.titulo)}</h3>
+          <p class="post-body">${escapeHtml(p.informacion)}</p>
 
-              <div class="post-details">
-                <span class="detail-pill">Fecha: ${escapeHtml(fechaBolo)}</span>
-                <span class="detail-pill salary">Salario: ${escapeHtml(p.salario || "A convenir")}</span>
-                <span class="detail-pill">Tel: ${escapeHtml(p.telefono)}</span>
-                
-               <button class="btn-solicitar" onclick="openContact('${escapeHtml(p.nombre_banda)}', 'Teléfono de contacto: ${escapeHtml(p.telefono)}\\n· Correo: ${escapeHtml(p.correo || 'No especificado')}')">
-  <span>Contactar</span>
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-    <polyline points="15 3 21 3 21 9"></polyline>
-    <line x1="10" y1="14" x2="21" y2="3"></line>
-  </svg>
-</button>
-              </div>
+          <div class="post-footer-row">
+            <div class="post-details">
+              <span class="detail-pill">Fecha: ${escapeHtml(fechaBolo)}</span>
+              <span class="detail-pill salary">Salario: ${escapeHtml(p.salario || "A convenir")}</span>
+              <span class="detail-pill">Tel: ${escapeHtml(p.telefono)}</span>
+            </div>
 
-            </article>
-          `;
+            <button class="btn-solicitar" onclick="openContact('${escapeHtml(p.nombre_banda)}', '${infoContacto}')">
+              <span>Contactar</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </button>
+          </div>
+        </article>
+      `;
         })
         .join("");
     }
