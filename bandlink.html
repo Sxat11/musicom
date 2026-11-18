@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +17,96 @@
       --text: #191919;
       --muted: #666666;
       --border: #e0dfdc;
+      --success: #057642;
+      --success-soft: #e6f4ea;
       --radius: 12px;
+    }
+
+    .user-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .user-avatar-sm {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      object-fit: cover;
+    }
+
+    .user-avatar-sm img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .btn-solicitar {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #0a66c2;
+      color: #ffffff;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .user-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #f4f2ee;
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .user-tab {
+      background: transparent;
+      border: none;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .user-tab.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-solicitar:hover {
+      background: #004182;
+    }
+
+    .btn-solicitar svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     * {
@@ -72,7 +162,7 @@
 
     .search-box {
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       padding: 8px 14px;
       border-radius: 20px;
       border: 1px solid var(--border);
@@ -220,8 +310,9 @@
     }
 
     /* Columna Derecha: Crear publicación y Feed */
-    .composer-row {
-      display: flex;
+    .composer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-bottom: 10px;
     }
@@ -235,6 +326,7 @@
       border-radius: 8px;
       font-size: 14px;
       outline: none;
+      background: #fff;
     }
 
     .composer textarea {
@@ -270,11 +362,11 @@
       background: var(--primary-hover);
     }
 
-    .guest-banner {
-      background: #fff8e6;
-      border: 1px solid #f5d68a;
-      color: #7a5200;
-      padding: 14px;
+    .info-banner {
+      background: var(--primary-soft);
+      border: 1px solid #c2dcf7;
+      color: #004182;
+      padding: 14px 16px;
       border-radius: var(--radius);
       font-size: 14px;
       margin-bottom: 16px;
@@ -284,7 +376,21 @@
       gap: 12px;
     }
 
-    /* Filtros */
+    .guest-banner {
+      background: #fff8e6;
+      border: 1px solid #f5d68a;
+      color: #7a5200;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Filtros por instrumento */
     .filters {
       display: flex;
       gap: 8px;
@@ -314,26 +420,30 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 10px;
       margin-bottom: 10px;
     }
 
     .post-author {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
+      color: var(--text);
     }
 
     .post-sub {
       font-size: 12px;
       color: var(--muted);
+      margin-top: 2px;
     }
 
     .post-tag {
       font-size: 12px;
-      font-weight: 600;
-      padding: 4px 10px;
+      font-weight: 700;
+      padding: 4px 12px;
       border-radius: 14px;
       background: var(--primary-soft);
       color: var(--primary);
+      white-space: nowrap;
     }
 
     .post-title {
@@ -346,8 +456,29 @@
       font-size: 14px;
       line-height: 1.5;
       color: #333;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       white-space: pre-line;
+    }
+
+    .post-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .detail-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: #f4f2ee;
+      color: #333;
+    }
+
+    .detail-pill.salary {
+      background: var(--success-soft);
+      color: var(--success);
     }
 
     .post-actions {
@@ -408,9 +539,14 @@
       .layout {
         grid-template-columns: 1fr;
       }
+
+      .composer-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- Barra Superior -->
@@ -418,13 +554,8 @@
     <div class="nav-inner">
       <div class="nav-left">
         <div class="logo-badge">BL</div>
-        <input
-          type="text"
-          id="search-input"
-          class="search-box"
-          placeholder="Buscar por instrumento, banda, ciudad..."
-          oninput="renderPosts()"
-        />
+        <input type="text" id="search-input" class="search-box" placeholder="Buscar por instrumento, banda, ciudad..."
+          oninput="renderPosts()" />
       </div>
       <div class="nav-right">
         <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
@@ -449,9 +580,20 @@
 
       <div class="card">
         <div class="users-list-title">
-          <span>Músicos y Bandas</span>
+          <span>Comunidad</span>
           <span id="users-count" style="font-size: 12px; color: var(--muted);">0</span>
         </div>
+
+        <!-- Selector Músicos / Bandas -->
+        <div class="user-tabs">
+          <button type="button" class="user-tab active" id="utab-musico" onclick="setUserFilter('musico')">
+            Músicos
+          </button>
+          <button type="button" class="user-tab" id="utab-banda" onclick="setUserFilter('banda')">
+            Bandas
+          </button>
+        </div>
+
         <div id="users-list">
           <p class="empty-state">Cargando usuarios...</p>
         </div>
@@ -462,38 +604,63 @@
     <section>
       <!-- Aviso si es invitado -->
       <div class="guest-banner" id="guest-banner" style="display: none;">
-        <span>Estás navegando como <strong>Invitado</strong>. Inicia sesión o regístrate para publicar anuncios.</span>
-        <button class="btn-primary" onclick="logout()">Registrarme</button>
+        <span>Estás navegando como <strong>Invitado</strong>. Inicia sesión o regístrate para interactuar con las
+          ofertas.</span>
+        <button class="btn-primary" onclick="logout()">Entrar / Registrarme</button>
       </div>
 
-      <!-- Formulario para crear publicación (solo usuarios registrados) -->
-      <div class="card composer" id="composer-card">
+      <!-- Aviso si es músico (solo lectura de ofertas) -->
+      <div class="info-banner" id="musician-banner" style="display: none;">
+        <span>Estás conectado como <strong>Músico</strong>. Explora las ofertas publicadas por las bandas, marca <em>Me
+            interesa</em> o contáctalas directamente.</span>
+      </div>
+
+      <!-- Formulario para crear publicación (EXCLUSIVO PARA BANDAS) -->
+      <div class="card composer" id="composer-card" style="display: none;">
         <form onsubmit="createPost(event)">
-          <div class="composer-row">
-            <select id="post-type" required>
-              <option value="Busco músico">Busco músico para banda</option>
-              <option value="Busco banda">Músico busca banda</option>
-              <option value="Demo / Bolo">Bolo / Colaboración</option>
+          <div class="composer-grid">
+            <input type="text" id="post-banda" placeholder="Nombre de la banda" required />
+            <select id="post-instrumento" required>
+              <option value="">Instrumento requerido...</option>
+              <option value="Batería">Batería</option>
+              <option value="Guitarrista">Guitarrista</option>
+              <option value="Bajista">Bajista</option>
+              <option value="Vocalista">Vocalista</option>
+              <option value="Teclista">Teclista / Pianista</option>
+              <option value="Viento / Metal">Viento / Metal</option>
+              <option value="Otro">Otro instrumento</option>
             </select>
-            <input type="text" id="post-city" placeholder="Ciudad (ej. A Coruña)" required />
           </div>
+
           <div style="margin-bottom: 10px;">
-            <input type="text" id="post-title" placeholder="Título del anuncio (ej. Buscamos batería para banda de Rock)" required />
+            <input type="text" id="post-titulo"
+              placeholder="Título del anuncio (ej. Se busca batería urgente para este sábado)" required />
           </div>
-          <textarea id="post-desc" placeholder="Describe el estilo, nivel, ensayos, condiciones..." required></textarea>
+
+          <textarea id="post-informacion"
+            placeholder="Información detallada (estilo, repertorio, ensayos, equipo necesario...)" required></textarea>
+
+          <div class="composer-grid">
+            <input type="text" id="post-ciudad" placeholder="Ciudad (ej. A Coruña)" required />
+            <input type="date" id="post-fecha" title="Fecha de actuación (opcional)" />
+            <input type="text" id="post-salario" placeholder="Salario (ej. 150 € o A convenir)" />
+            <input type="tel" id="post-telefono" placeholder="Teléfono de contacto (ej. 600123456)" required />
+          </div>
+
           <div class="composer-footer">
-            <span style="font-size: 12px; color: var(--muted);" id="composer-status">Visible para todos los usuarios</span>
-            <button type="submit" class="btn-primary" id="btn-publish">Publicar anuncio</button>
+            <span style="font-size: 12px; color: var(--muted);">Publicando oferta como banda</span>
+            <button type="submit" class="btn-primary" id="btn-publish">Publicar oferta</button>
           </div>
         </form>
       </div>
 
-      <!-- Filtros rápidos -->
+      <!-- Filtros rápidos por instrumento -->
       <div class="filters">
         <button class="filter-chip active" onclick="setFilter('Todos', this)">Todos</button>
-        <button class="filter-chip" onclick="setFilter('Busco músico', this)">Busco músico</button>
-        <button class="filter-chip" onclick="setFilter('Busco banda', this)">Busco banda</button>
-        <button class="filter-chip" onclick="setFilter('Demo / Bolo', this)">Bolos / Colaboraciones</button>
+        <button class="filter-chip" onclick="setFilter('Batería', this)">Batería</button>
+        <button class="filter-chip" onclick="setFilter('Guitarrista', this)">Guitarrista</button>
+        <button class="filter-chip" onclick="setFilter('Bajista', this)">Bajista</button>
+        <button class="filter-chip" onclick="setFilter('Vocalista', this)">Vocalista</button>
       </div>
 
       <!-- Feed de publicaciones -->
@@ -507,7 +674,7 @@
   <div class="modal-backdrop" id="contact-modal">
     <div class="modal-box">
       <h3 style="margin-bottom: 8px;" id="modal-title">Contactar</h3>
-      <p style="font-size: 14px; color: var(--muted); margin-bottom: 14px;" id="modal-info"></p>
+      <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;" id="modal-info"></p>
       <div style="display: flex; justify-content: flex-end;">
         <button class="btn-primary" onclick="closeModal()">Cerrar</button>
       </div>
@@ -528,12 +695,21 @@
     // Inicializar página
     window.addEventListener("DOMContentLoaded", async () => {
       const rawSession = localStorage.getItem("bandlink_session");
-      if (!rawSession) {
-        window.location.href = "index.html";
-        return;
+      if (rawSession) {
+        session = JSON.parse(rawSession);
+      } else {
+        session = {
+          id: null,
+          loggedIn: false,
+          isGuest: true,
+          accountType: "invitado",
+          name: "Invitado",
+          role: "Modo lectura",
+          city: "España",
+          email: ""
+        };
       }
 
-      session = JSON.parse(rawSession);
       setupUserProfile();
       await Promise.all([loadUsers(), loadPosts()]);
     });
@@ -547,27 +723,34 @@
         session.accountType === "banda"
           ? "Banda"
           : session.accountType === "musico"
-          ? "Músico"
-          : "Invitado";
+            ? "Músico"
+            : "Invitado";
       document.getElementById("my-type").textContent = typeLabel;
 
-      if (session.isGuest) {
-        document.getElementById("composer-card").style.display = "none";
-        document.getElementById("guest-banner").style.display = "flex";
+      // Control de permisos: solo las BANDAS pueden crear anuncios
+      if (session.accountType === "banda" && !session.isGuest) {
+        document.getElementById("composer-card").style.display = "block";
+        document.getElementById("post-ciudad").value = session.city || "";
+        document.getElementById("post-banda").value = session.name || "";
+      } else if (session.accountType === "musico" && !session.isGuest) {
+        document.getElementById("musician-banner").style.display = "flex";
       } else {
-        document.getElementById("post-city").value = session.city || "";
+        document.getElementById("guest-banner").style.display = "flex";
       }
     }
 
     // Cargar usuarios reales desde Supabase
+    // Cargar usuarios reales desde Supabase (compatible con cualquier cambio de columnas)
     async function loadUsers() {
       const { data, error } = await db
         .from("usuarios")
-        .select("id, tipo_cuenta, nombre, especialidad, ciudad, email")
+        .select("*")
         .order("creado_en", { ascending: false });
 
       if (error) {
-        document.getElementById("users-list").innerHTML = `<p class="empty-state">Error al cargar usuarios.</p>`;
+        console.error("Error cargando usuarios:", error);
+        document.getElementById("users-list").innerHTML =
+          `<p class="empty-state">Error al cargar usuarios: ${escapeHtml(error.message)}</p>`;
         return;
       }
 
@@ -576,29 +759,58 @@
       renderUsers();
     }
 
+
+    let currentUserTypeFilter = "musico"; // Empieza mostrando Músicos
+
+    function setUserFilter(type) {
+      currentUserTypeFilter = type;
+      document.getElementById("utab-musico").classList.toggle("active", type === "musico");
+      document.getElementById("utab-banda").classList.toggle("active", type === "banda");
+      renderUsers();
+    }
+
     function renderUsers() {
       const container = document.getElementById("users-list");
-      if (allUsers.length === 0) {
-        container.innerHTML = `<p class="empty-state">Aún no hay usuarios registrados.</p>`;
+      const filteredUsers = allUsers.filter((u) => u.tipo_cuenta === currentUserTypeFilter);
+
+      document.getElementById("users-count").textContent = filteredUsers.length;
+
+      if (filteredUsers.length === 0) {
+        const label = currentUserTypeFilter === "musico" ? "músicos" : "bandas";
+        container.innerHTML = `<p class="empty-state">Aún no hay ${label} registrados.</p>`;
         return;
       }
 
-      container.innerHTML = allUsers
-        .map(
-          (u) => `
-          <div class="user-item">
+      container.innerHTML = filteredUsers
+        .map((u) => {
+          const etiquetaRol =
+            u.especialidad || (u.tipo_cuenta === "banda" ? "Banda" : "Músico");
+          const detalleModal = `${etiquetaRol} · ${u.ciudad || "Sin ciudad"}\\nCorreo: ${u.email || "No disponible"}`;
+          const inicial = (u.nombre || "?").charAt(0).toUpperCase();
+
+          // Si tiene foto_url en Supabase muestra la imagen; si no, su inicial
+          const avatarHtml = u.foto_url
+            ? `<div class="user-avatar-sm"><img src="${escapeHtml(u.foto_url)}" alt="${escapeHtml(u.nombre)}" onerror="this.parentElement.textContent='${inicial}'" /></div>`
+            : `<div class="user-avatar-sm">${inicial}</div>`;
+
+          return `
+        <div class="user-item">
+          <div class="user-left">
+            ${avatarHtml}
             <div class="user-info">
               <h4>${escapeHtml(u.nombre)}</h4>
-              <p>${escapeHtml(u.especialidad)} · ${escapeHtml(u.ciudad)}</p>
+              <p>${escapeHtml(etiquetaRol)} · ${escapeHtml(u.ciudad || "")}</p>
             </div>
-            <button class="btn-small" onclick="openContact('${escapeHtml(u.nombre)}', '${escapeHtml(u.email)}', '${escapeHtml(u.especialidad)}')">
-              Ver
-            </button>
           </div>
-        `
-        )
+          <button class="btn-small" onclick="openContact('${escapeHtml(u.nombre)}', '${detalleModal}')">
+            Ver
+          </button>
+        </div>
+      `;
+        })
         .join("");
     }
+
 
     // Cargar publicaciones reales desde Supabase
     async function loadPosts() {
@@ -608,7 +820,8 @@
         .order("creado_en", { ascending: false });
 
       if (error) {
-        document.getElementById("posts-feed").innerHTML = `<div class="card empty-state">Error al cargar publicaciones: ${error.message}</div>`;
+        console.error("Error Supabase:", error);
+        document.getElementById("posts-feed").innerHTML = `<div class="card empty-state">Error al cargar publicaciones: ${escapeHtml(error.message)}</div>`;
         return;
       }
 
@@ -616,38 +829,48 @@
       renderPosts();
     }
 
-    // Publicar nuevo anuncio en Supabase
+    // Publicar nuevo anuncio en Supabase (solo bandas)
     async function createPost(e) {
       e.preventDefault();
-      if (session.isGuest) return;
+      if (session.accountType !== "banda" || session.isGuest) {
+        alert("Solo las cuentas registradas como Banda pueden publicar anuncios.");
+        return;
+      }
 
       const btn = document.getElementById("btn-publish");
       btn.disabled = true;
       btn.textContent = "Publicando...";
 
+      const fechaValor = document.getElementById("post-fecha").value;
+      const salarioValor = document.getElementById("post-salario").value.trim();
+
       const newPost = {
         autor_id: session.id || null,
-        autor_nombre: session.name,
-        autor_rol: session.role,
-        tipo_anuncio: document.getElementById("post-type").value,
-        titulo: document.getElementById("post-title").value.trim(),
-        descripcion: document.getElementById("post-desc").value.trim(),
-        ciudad: document.getElementById("post-city").value.trim(),
+        nombre_banda: document.getElementById("post-banda").value.trim(),
+        titulo: document.getElementById("post-titulo").value.trim(),
+        informacion: document.getElementById("post-informacion").value.trim(),
+        instrumento_requerido: document.getElementById("post-instrumento").value,
+        fecha_actuacion: fechaValor ? fechaValor : null,
+        ciudad: document.getElementById("post-ciudad").value.trim(),
+        salario: salarioValor ? salarioValor : "A convenir",
+        telefono: document.getElementById("post-telefono").value.trim(),
         interesados: 0
       };
 
       const { error } = await db.from("publicaciones").insert([newPost]);
 
       btn.disabled = false;
-      btn.textContent = "Publicar anuncio";
+      btn.textContent = "Publicar oferta";
 
       if (error) {
         alert("No se pudo publicar: " + error.message);
         return;
       }
 
-      document.getElementById("post-title").value = "";
-      document.getElementById("post-desc").value = "";
+      document.getElementById("post-titulo").value = "";
+      document.getElementById("post-informacion").value = "";
+      document.getElementById("post-fecha").value = "";
+      document.getElementById("post-salario").value = "";
       await loadPosts();
     }
 
@@ -676,58 +899,77 @@
       const query = document.getElementById("search-input").value.trim().toLowerCase();
 
       const filtered = allPosts.filter((p) => {
-        const matchesType = currentFilter === "Todos" || p.tipo_anuncio === currentFilter;
+        const instrumento = (p.instrumento_requerido || "").toLowerCase();
+        const matchesInstrument =
+          currentFilter === "Todos" || instrumento.includes(currentFilter.toLowerCase());
+
         const matchesSearch =
           !query ||
-          p.titulo.toLowerCase().includes(query) ||
-          p.descripcion.toLowerCase().includes(query) ||
-          p.ciudad.toLowerCase().includes(query) ||
-          p.autor_nombre.toLowerCase().includes(query) ||
-          p.autor_rol.toLowerCase().includes(query);
-        return matchesType && matchesSearch;
+          (p.titulo || "").toLowerCase().includes(query) ||
+          (p.informacion || "").toLowerCase().includes(query) ||
+          (p.ciudad || "").toLowerCase().includes(query) ||
+          (p.nombre_banda || "").toLowerCase().includes(query) ||
+          instrumento.includes(query);
+
+        return matchesInstrument && matchesSearch;
       });
 
       if (filtered.length === 0) {
-        feed.innerHTML = `<div class="card empty-state">No hay publicaciones que coincidan con tu búsqueda. ¡Sé el primero en publicar!</div>`;
+        feed.innerHTML = `<div class="card empty-state">No hay publicaciones que coincidan con tu búsqueda.</div>`;
         return;
       }
 
       feed.innerHTML = filtered
         .map((p) => {
-          const fecha = new Date(p.creado_en).toLocaleDateString("es-ES", {
-            day: "numeric",
-            month: "short"
-          });
+          const fechaPublicacion = p.creado_en
+            ? new Date(p.creado_en).toLocaleDateString("es-ES", { day: "numeric", month: "short" })
+            : "";
+
+          const fechaBolo = p.fecha_actuacion
+            ? new Date(p.fecha_actuacion + "T00:00:00").toLocaleDateString("es-ES", {
+              day: "numeric",
+              month: "long",
+              year: "numeric"
+            })
+            : "Fecha flexible / banda fija";
+
           return `
             <article class="card">
               <div class="post-header">
                 <div>
-                  <div class="post-author">${escapeHtml(p.autor_nombre)}</div>
-                  <div class="post-sub">${escapeHtml(p.autor_rol)} · ${escapeHtml(p.ciudad)} · ${fecha}</div>
+                  <div class="post-author">${escapeHtml(p.nombre_banda)}</div>
+                  <div class="post-sub">${escapeHtml(p.ciudad)} · Publicado el ${fechaPublicacion}</div>
                 </div>
-                <span class="post-tag">${escapeHtml(p.tipo_anuncio)}</span>
+                <span class="post-tag">Se busca: ${escapeHtml(p.instrumento_requerido)}</span>
               </div>
+
               <h3 class="post-title">${escapeHtml(p.titulo)}</h3>
-              <p class="post-body">${escapeHtml(p.descripcion)}</p>
-              <div class="post-actions">
-                <button class="action-btn" onclick="toggleInterest('${p.id}', ${p.interesados || 0})">
-                  Me interesa (${p.interesados || 0})
-                </button>
-                <button class="action-btn" onclick="openContact('${escapeHtml(p.autor_nombre)}', '', '${escapeHtml(p.autor_rol)} - ${escapeHtml(p.ciudad)}')">
-                  Contactar
-                </button>
+              <p class="post-body">${escapeHtml(p.informacion)}</p>
+
+              <div class="post-details">
+                <span class="detail-pill">Fecha: ${escapeHtml(fechaBolo)}</span>
+                <span class="detail-pill salary">Salario: ${escapeHtml(p.salario || "A convenir")}</span>
+                <span class="detail-pill">Tel: ${escapeHtml(p.telefono)}</span>
+                
+               <button class="btn-solicitar" onclick="openContact('${escapeHtml(p.nombre_banda)}', 'Teléfono de contacto: ${escapeHtml(p.telefono)}\\n· Correo: ${escapeHtml(p.correo || 'No especificado')}')">
+  <span>Contactar</span>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+    <polyline points="15 3 21 3 21 9"></polyline>
+    <line x1="10" y1="14" x2="21" y2="3"></line>
+  </svg>
+</button>
               </div>
+
             </article>
           `;
         })
         .join("");
     }
 
-    function openContact(name, email, extra) {
-      document.getElementById("modal-title").textContent = name;
-      document.getElementById("modal-info").textContent = email
-        ? `${extra} — Correo de contacto: ${email}`
-        : `${extra} — Puedes localizar este perfil en la lista de Músicos y Bandas de la izquierda para ver su correo.`;
+    function openContact(title, info) {
+      document.getElementById("modal-title").textContent = title;
+      document.getElementById("modal-info").textContent = info;
       document.getElementById("contact-modal").classList.add("open");
     }
 
@@ -740,7 +982,15 @@
       window.location.href = "index.html";
     }
 
- 
+    function escapeHtml(text) {
+      if (!text) return "";
+      return String(text)
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, "");
+    }
   </script>
 </body>
+
 </html>

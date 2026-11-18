@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -326,10 +327,12 @@
         grid-template-columns: 1fr;
         gap: 24px;
       }
+
       .brand-side {
         text-align: center;
         padding-right: 0;
       }
+
       .features {
         text-align: left;
         max-width: 440px;
@@ -338,6 +341,10 @@
     }
   </style>
 </head>
+
+
+<!--Codigo-->
+
 <body>
 
   <main class="container">
@@ -348,7 +355,8 @@
       </div>
       <h1>Conecta con músicos y bandas cerca de ti</h1>
       <p>
-        La plataforma directa para encontrar integrantes para tu proyecto musical, unirte a bandas activas o cerrar bolos sin intermediarios.
+        La plataforma directa para encontrar integrantes para tu proyecto musical, unirte a bandas activas o cerrar
+        bolos sin intermediarios.
       </p>
       <ul class="features">
         <li>
@@ -384,7 +392,8 @@
             <label for="login-password">Contraseña</label>
             <div class="password-wrap">
               <input type="password" id="login-password" placeholder="Tu contraseña" required />
-              <button type="button" class="toggle-pass" onclick="togglePassword('login-password', this)">Mostrar</button>
+              <button type="button" class="toggle-pass"
+                onclick="togglePassword('login-password', this)">Mostrar</button>
             </div>
           </div>
           <button type="submit" class="btn-primary" id="btn-login-submit">Entrar</button>
@@ -426,19 +435,7 @@
             </select>
           </div>
 
-          <div class="field" id="field-genre" style="display: none;">
-            <label for="reg-genre">Estilo / Género principal de la banda</label>
-            <select id="reg-genre">
-              <option value="Rock / Alternativo">Rock / Alternativo</option>
-              <option value="Indie / Pop">Indie / Pop</option>
-              <option value="Metal / Hardcore">Metal / Hardcore</option>
-              <option value="Jazz / Blues / Soul">Jazz / Blues / Soul</option>
-              <option value="Funk / Fusion">Funk / Fusion</option>
-              <option value="Orquesta / Verbena">Orquesta / Verbena</option>
-              <option value="Urbano / Electrónica">Urbano / Electrónica</option>
-              <option value="Otro estilo">Otro estilo</option>
-            </select>
-          </div>
+
 
           <div class="field">
             <label for="reg-city">Ciudad</label>
@@ -494,20 +491,17 @@
       const labelName = document.getElementById("label-name");
       const inputName = document.getElementById("reg-name");
       const fieldInstrument = document.getElementById("field-instrument");
-      const fieldGenre = document.getElementById("field-genre");
       const submitBtn = document.getElementById("btn-register-submit");
 
       if (type === "musico") {
         labelName.textContent = "Nombre artístico o completo";
         inputName.placeholder = "Ej. Carlos Pérez";
         fieldInstrument.style.display = "block";
-        fieldGenre.style.display = "none";
         submitBtn.textContent = "Crear cuenta de Músico";
       } else {
         labelName.textContent = "Nombre de la banda o proyecto";
         inputName.placeholder = "Ej. Los Atlánticos";
         fieldInstrument.style.display = "none";
-        fieldGenre.style.display = "block";
         submitBtn.textContent = "Crear cuenta de Banda";
       }
     }
@@ -557,7 +551,7 @@
       const specialty =
         currentAccountType === "musico"
           ? document.getElementById("reg-instrument").value
-          : "Banda · " + document.getElementById("reg-genre").value;
+          : "Banda";
 
       try {
         const { data, error } = await db
@@ -566,7 +560,6 @@
             {
               tipo_cuenta: currentAccountType,
               nombre: name,
-              especialidad: specialty,
               ciudad: city,
               email: email,
               password: password
@@ -592,7 +585,6 @@
           isGuest: false,
           accountType: data.tipo_cuenta,
           name: data.nombre,
-          role: data.especialidad,
           city: data.ciudad,
           email: data.email
         });
@@ -643,7 +635,6 @@
           isGuest: false,
           accountType: data.tipo_cuenta,
           name: data.nombre,
-          role: data.especialidad,
           city: data.ciudad,
           email: data.email
         });
@@ -669,4 +660,5 @@
     }
   </script>
 </body>
+
 </html>
