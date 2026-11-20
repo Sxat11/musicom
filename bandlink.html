@@ -283,9 +283,17 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 10px;
+      overflow: hidden;
     }
 
-    .badge-type {
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    F .badge-type {
       display: inline-block;
       font-size: 11px;
       font-weight: 700;
@@ -679,13 +687,21 @@
             <input type="text" id="post-banda" placeholder="Nombre de la banda" required />
             <select id="post-instrumento" required>
               <option value="">Instrumento requerido...</option>
-              <option value="Batería">Batería</option>
-              <option value="Guitarrista">Guitarrista</option>
-              <option value="Bajista">Bajista</option>
-              <option value="Vocalista">Vocalista</option>
-              <option value="Teclista">Teclista / Pianista</option>
-              <option value="Viento / Metal">Viento / Metal</option>
-              <option value="Otro">Otro instrumento</option>
+              <option value="Saxofon">Saxofón</option>
+              <option value="Clarinete">Clarinete</option>
+              <option value="Gaita">Gaita</option>
+              <option value="Oboe">Oboe</option>
+              <option value="Pianista">Pianista</option>
+              <option value="Flauta">Flauta</option>
+              <option value="Trompeta">Trompeta</option>
+              <option value="Trompa">Trompa</option>
+              <option value="Trombón">Trombón</option>
+              <option value="Bajo">Bajo</option>
+              <option value="Percusión">Percusión</option>
+              <option value="Guitarra">Guitarra</option>
+              <option value="Voz">Voz</option>
+              <option value="Tuba">Tuba</option>
+              <option value="Bombardino">Bombardino</option>
             </select>
           </div>
 
@@ -716,10 +732,22 @@
       <!-- Filtros rápidos por instrumento -->
       <div class="filters">
         <button class="filter-chip active" onclick="setFilter('Todos', this)">Todos</button>
-        <button class="filter-chip" onclick="setFilter('Batería', this)">Batería</button>
-        <button class="filter-chip" onclick="setFilter('Guitarrista', this)">Guitarrista</button>
-        <button class="filter-chip" onclick="setFilter('Bajista', this)">Bajista</button>
-        <button class="filter-chip" onclick="setFilter('Vocalista', this)">Vocalista</button>
+        <button class="filter-chip" onclick="setFilter('Saxofon', this)">Saxofón</button>
+        <button class="filter-chip" onclick="setFilter('Clarinete', this)">Clarinete</button>
+        <button class="filter-chip" onclick="setFilter('Gaita', this)">Gaita</button>
+        <button class="filter-chip" onclick="setFilter('Oboe', this)">Oboe</button>
+        <button class="filter-chip" onclick="setFilter('Pianista', this)">Pianista</button>
+        <button class="filter-chip" onclick="setFilter('Flauta', this)">Flauta</button>
+        <button class="filter-chip" onclick="setFilter('Trompeta', this)">Trompeta</button>
+        <button class="filter-chip" onclick="setFilter('Trompa', this)">Trompa</button>
+        <button class="filter-chip" onclick="setFilter('Trombón', this)">Trombón</button>
+        <button class="filter-chip" onclick="setFilter('Bajo', this)">Bajo</button>
+        <button class="filter-chip" onclick="setFilter('Percusión', this)">Percusión</button>
+        <button class="filter-chip" onclick="setFilter('Guitarra', this)">Guitarra</button>
+        <button class="filter-chip" onclick="setFilter('Voz', this)">Voz</button>
+        <button class="filter-chip" onclick="setFilter('Tuba', this)">Tuba</button>
+        <button class="filter-chip" onclick="setFilter('Bombardino', this)">Bombardino</button>
+        
       </div>
 
       <!-- Feed de publicaciones -->
@@ -775,10 +803,25 @@
     });
 
     function setupUserProfile() {
-      document.getElementById("my-name").textContent = session.name || "Invitado";
-      document.getElementById("my-avatar").textContent = (session.name || "?").charAt(0).toUpperCase();
-      document.getElementById("my-meta").textContent = `${session.role} · ${session.city}`;
-      document.getElementById("post-telefono").value = session.telefono || "";
+      const nombre = session.name || "Invitado";
+      const inicial = nombre.charAt(0).toUpperCase();
+      const avatarEl = document.getElementById("my-avatar");
+
+      document.getElementById("my-name").textContent = nombre;
+
+      if (session.foto_url) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(session.foto_url)}" alt="${escapeHtml(nombre)}" onerror="this.parentElement.textContent='${inicial}'" />`;
+      } else {
+        avatarEl.textContent = inicial;
+      }
+
+      const rolTexto =
+        session.instrumento ||
+        session.role ||
+        (session.accountType === "banda" ? "Banda" : session.accountType === "musico" ? "Músico" : "Modo lectura");
+
+      document.getElementById("my-meta").textContent = `${rolTexto} · ${session.city || "España"}`;
+
       const typeLabel =
         session.accountType === "banda"
           ? "Banda"
@@ -787,23 +830,17 @@
             : "Invitado";
       document.getElementById("my-type").textContent = typeLabel;
 
-      // Control de permisos: solo las BANDAS pueden crear anuncios
       if (session.accountType === "banda" && !session.isGuest) {
         document.getElementById("composer-card").style.display = "block";
         document.getElementById("post-ciudad").value = session.city || "";
         document.getElementById("post-banda").value = session.name || "";
+        document.getElementById("post-telefono").value = session.telefono || "";
+        document.getElementById("publishing-as").innerHTML =
+          `Publicando oferta como <strong>${escapeHtml(session.name)}</strong>`;
       } else if (session.accountType === "musico" && !session.isGuest) {
         document.getElementById("musician-banner").style.display = "flex";
       } else {
         document.getElementById("guest-banner").style.display = "flex";
-      }
-
-      if (session.accountType === "banda" && !session.isGuest) {
-        document.getElementById("composer-card").style.display = "block";
-        document.getElementById("post-ciudad").value = session.city || "";
-        document.getElementById("post-banda").value = session.name || "";
-        document.getElementById("publishing-as").innerHTML =
-          `Publicando oferta como <strong>${escapeHtml(session.name)}</strong>`;
       }
     }
 
@@ -826,6 +863,19 @@
 
 
       allUsers = data || [];
+      if (session && !session.isGuest && session.id) {
+        const miUsuario = allUsers.find((u) => u.id === session.id);
+        if (miUsuario) {
+          session.name = miUsuario.nombre;
+          session.instrumento = miUsuario.instrumento || "";
+          session.role = miUsuario.instrumento || (miUsuario.tipo_cuenta === "banda" ? "Banda" : "Músico");
+          session.city = miUsuario.ciudad || session.city;
+          session.foto_url = miUsuario.foto_url || "";
+          session.telefono = miUsuario.telefono || "";
+          localStorage.setItem("bandlink_session", JSON.stringify(session));
+          setupUserProfile();
+        }
+      }
       // Dentro de loadUsers(), justo después de: allUsers = data || [];
       if (session && session.accountType === "banda" && session.id) {
         const miBanda = allUsers.find((u) => u.id === session.id);
@@ -851,13 +901,17 @@
 
     function renderUsers() {
       const container = document.getElementById("users-list");
-      const filteredUsers = allUsers.filter((u) => u.tipo_cuenta === currentUserTypeFilter);
+
+      // Filtra por tipo (Músicos / Bandas) y excluye al usuario que tiene la sesión iniciada
+      const filteredUsers = allUsers.filter(
+        (u) => u.tipo_cuenta === currentUserTypeFilter && u.id !== session?.id
+      );
 
       document.getElementById("users-count").textContent = filteredUsers.length;
 
       if (filteredUsers.length === 0) {
         const label = currentUserTypeFilter === "musico" ? "músicos" : "bandas";
-        container.innerHTML = `<p class="empty-state">Aún no hay ${label} registrados.</p>`;
+        container.innerHTML = `<p class="empty-state">Aún no hay otros ${label} registrados.</p>`;
         return;
       }
 
@@ -865,10 +919,8 @@
         .map((u) => {
           const etiquetaRol =
             u.instrumento || (u.tipo_cuenta === "banda" ? "Banda" : "Músico");
-          const detalleModal = `${etiquetaRol} · ${u.ciudad || "Sin ciudad"}\\nCorreo: ${u.email || "No disponible"}`;
           const inicial = (u.nombre || "?").charAt(0).toUpperCase();
 
-          // Si tiene foto_url en Supabase muestra la imagen; si no, su inicial
           const avatarHtml = u.foto_url
             ? `<div class="user-avatar-sm"><img src="${escapeHtml(u.foto_url)}" alt="${escapeHtml(u.nombre)}" onerror="this.parentElement.textContent='${inicial}'" /></div>`
             : `<div class="user-avatar-sm">${inicial}</div>`;
@@ -882,9 +934,9 @@
               <p>${escapeHtml(etiquetaRol)} · ${escapeHtml(u.ciudad || "")}</p>
             </div>
           </div>
-         <button class="btn-small" onclick="window.location.href='info.html?id=${u.id}'">
-  Ver
-      </button>
+          <button class="btn-small" onclick="window.location.href='info.html?id=${u.id}'">
+            Ver
+          </button>
         </div>
       `;
         })
@@ -1011,7 +1063,7 @@
               month: "long",
               year: "numeric"
             })
-            : "Fecha flexible / banda fija";
+            : "Fecha no especificada";
 
           // Buscar foto de perfil de la banda en los usuarios cargados
           const bandaUsuario = allUsers.find(
@@ -1050,7 +1102,7 @@
           <div class="post-footer-row">
             <div class="post-details">
               <span class="detail-pill">Fecha: ${escapeHtml(fechaBolo)}</span>
-              <span class="detail-pill salary">Salario: ${escapeHtml(p.salario || "A convenir")}</span>
+              <span class="detail-pill salary">Salario: ${escapeHtml(p.salario + "€" || "A convenir")}</span>
               <span class="detail-pill">Tel: ${escapeHtml(p.telefono)}</span>
             </div>
 

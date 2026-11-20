@@ -35,6 +35,55 @@
             padding-bottom: 40px;
         }
 
+        .recommend-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .recommend-row .stats-link {
+            margin-bottom: 0;
+        }
+
+        .recommend-badge-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: #057642;
+            background: #e6f4ea;
+            padding: 4px 12px;
+            border-radius: 999px;
+        }
+
+        .btn-recommend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-recommend:hover {
+            background: var(--primary-soft);
+        }
+
+        .btn-recommend.recommended {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-recommend.recommended:hover {
+            background: var(--primary-hover);
+        }
+
         /* Barra superior */
         .navbar {
             background: var(--card);
@@ -529,7 +578,25 @@
                             <a class="contact-link" onclick="openContactModal()">Información de contacto</a>
                         </p>
 
-                        <span class="stats-link" id="profile-posts-count">0 publicaciones en BandLink</span>
+                        <div class="recommend-row">
+                            <span class="stats-link" id="profile-posts-count">0 publicaciones en BandLink</span>
+
+                            <!-- Contador de recomendaciones (visible en perfiles de músico) -->
+                        </div>
+                        <div class="padding-down:2">
+
+                            <span class="recommend-badge-count" id="recommend-count" style="display: none;">
+                                0 recomendaciones de bandas
+                            </span>
+
+                            <!-- Botón exclusivo para que las BANDAS recomienden a este músico -->
+                            <button type="button" class="btn-recommend" id="btn-recommend-musician"
+                                style="display: none;" onclick="toggleRecommendMusician()">
+                                <span id="btn-recommend-icon">👍</span>
+                                <span id="btn-recommend-text">Recomendar músico</span>
+                                
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Bloque derecho estilo "IES Vilalonga" -->
@@ -540,12 +607,12 @@
                 </div>
 
                 <!-- Botones píldora (cambian según si es tu perfil o el de otro usuario) -->
-                <div class="action-pills" id="owner-actions" style="display: none;">
+                <!-- <div class="action-pills" id="owner-actions" style="display: none;">
                     <button class="pill-btn-primary" onclick="openEditModal()">Editar perfil</button>
                     <button class="pill-btn-outline" onclick="openEditModal()">Añadir foto / portada</button>
                     <button class="pill-btn-outline" onclick="openEditModal()">Disponibilidad</button>
                     <button class="pill-btn-muted" onclick="openContactModal()">Mis datos de contacto</button>
-                </div>
+                </div> -->
 
                 <div class="action-pills" id="visitor-actions" style="display: none;">
                     <button class="pill-btn-primary" onclick="openContactModal()">Contactar</button>
@@ -617,8 +684,22 @@
                     <input type="tel" id="edit-telefono" placeholder="Ej. 600123456" />
                 </div>
                 <div class="field">
-                    <label for="edit-foto">URL de foto de perfil (enlace de imagen)</label>
-                    <input type="url" id="edit-foto" placeholder="https://..." />
+                    <label for="edit-foto-file">Foto de perfil (seleccionar desde tu equipo)</label>
+                    <input type="file" id="edit-foto-file" accept="image/*" onchange="procesarImagen(this, 'foto')" />
+                    <div id="preview-foto-wrap" style="margin-top: 8px; display: none;">
+                        <img id="preview-foto"
+                            style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="edit-portada-file">Imagen de portada (seleccionar desde tu equipo)</label>
+                    <input type="file" id="edit-portada-file" accept="image/*"
+                        onchange="procesarImagen(this, 'portada')" />
+                    <div id="preview-portada-wrap" style="margin-top: 8px; display: none;">
+                        <img id="preview-portada"
+                            style="width: 100%; height: 80px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border);" />
+                    </div>
                 </div>
                 <div class="field">
                     <label for="edit-portada">URL de imagen de portada (opcional)</label>
@@ -679,7 +760,49 @@
             isOwnProfile = Boolean(session && !session.isGuest && session.id === targetId);
             await loadProfile(targetId);
         });
+        let nuevaFotoBase64 = null;
+        let nuevaPortadaBase64 = null;
 
+        function procesarImagen(input, tipo) {
+            const archivo = input.files[0];
+            if (!archivo) return;
+
+            const reader = new FileReader();
+            reader.onload = function (evento) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement("canvas");
+                    const maxAncho = tipo === "foto" ? 400 : 1000;
+                    let ancho = img.width;
+                    let alto = img.height;
+
+                    if (ancho > maxAncho) {
+                        alto = Math.round((alto * maxAncho) / ancho);
+                        ancho = maxAncho;
+                    }
+
+                    canvas.width = ancho;
+                    canvas.height = alto;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, ancho, alto);
+
+                    // Comprimir a JPEG ligero para guardar directamente en Supabase
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+
+                    if (tipo === "foto") {
+                        nuevaFotoBase64 = dataUrl;
+                        document.getElementById("preview-foto").src = dataUrl;
+                        document.getElementById("preview-foto-wrap").style.display = "block";
+                    } else {
+                        nuevaPortadaBase64 = dataUrl;
+                        document.getElementById("preview-portada").src = dataUrl;
+                        document.getElementById("preview-portada-wrap").style.display = "block";
+                    }
+                };
+                img.src = evento.target.result;
+            };
+            reader.readAsDataURL(archivo);
+        }
         async function loadProfile(userId) {
             const { data, error } = await db
                 .from("usuarios")
@@ -701,6 +824,41 @@
             const u = viewedUser;
             const inicial = (u.nombre || "?").charAt(0).toUpperCase();
 
+            // Dentro de renderProfile(), al final de la función:
+            const recommendCountEl = document.getElementById("recommend-count");
+            const btnRecommendEl = document.getElementById("btn-recommend-musician");
+
+            if (u.tipo_cuenta === "musico") {
+                const listaRecomendaciones = Array.isArray(u.recomendaciones) ? u.recomendaciones : [];
+                const total = listaRecomendaciones.length;
+
+                recommendCountEl.style.display = "inline-block";
+                if (total > 0) {
+                    recommendCountEl.style.display = "inline-block";
+                    recommendCountEl.textContent = `Recomendado por ${total} ${total === 1 ? "usuario" : "usuarios"}`;
+                } else {
+                    recommendCountEl.style.display = "none";
+                }
+                // Solo las BANDAS conectadas (y que no sean el propio usuario) ven el botón
+                if (session && !session.isGuest && session.accountType === "banda" && !isOwnProfile) {
+                    const yaRecomendado = listaRecomendaciones.includes(session.id);
+                    btnRecommendEl.style.display = "inline-flex";
+                    btnRecommendEl.classList.toggle("recommended", yaRecomendado);
+                    document.getElementById("btn-recommend-icon").textContent = yaRecomendado ? "✓" : "👍";
+                    document.getElementById("btn-recommend-text").textContent = yaRecomendado
+                        ? "Músico recomendado"
+                        : "Recomendar músico";
+                } else {
+                    btnRecommendEl.style.display = "none";
+                }
+            } else {
+                recommendCountEl.style.display = "none";
+                btnRecommendEl.style.display = "none";
+            }
+
+
+
+
             // Portada
             if (u.portada_url) {
                 document.getElementById("cover-banner").style.backgroundImage = `url('${u.portada_url}')`;
@@ -717,16 +875,16 @@
             // Textos principales
             document.getElementById("profile-name").textContent = u.nombre;
             document.getElementById("profile-account-type").textContent =
-                u.tipo_cuenta === "banda" ? "Perfil de Banda" : "Perfil de Músico";
+                u.tipo_cuenta === "banda" ? "Banda Verificada" : "Perfil de Músico";
 
-           
+
 
             document.getElementById("profile-city").textContent = u.ciudad || "España";
 
             // Afiliación derecha (estilo IES Vilalonga)
-            const bandaTexto = u.banda_actual || (u.tipo_cuenta === "banda" ? u.nombre : "Músico independiente");
-            document.getElementById("affiliation-text").textContent = bandaTexto;
-            document.getElementById("affiliation-icon").textContent = bandaTexto.charAt(0).toUpperCase();
+            // const bandaTexto = u.banda_actual || (u.tipo_cuenta === "banda" ? u.nombre : "Músico independiente");
+            // document.getElementById("affiliation-text").textContent = bandaTexto;
+            // document.getElementById("affiliation-icon").textContent = bandaTexto.charAt(0).toUpperCase();
 
             // Tarjeta inferior destacada
             document.getElementById("highlight-title-1").textContent =
@@ -785,16 +943,36 @@
         // Abrir modal de edición precargado con los datos actuales
         function openEditModal() {
             if (!isOwnProfile || !viewedUser) return;
+            nuevaFotoBase64 = null;
+            nuevaPortadaBase64 = null;
+
             document.getElementById("edit-name").value = viewedUser.nombre || "";
+            document.getElementById("edit-specialty").value = viewedUser.instrumento || "";
             document.getElementById("edit-city").value = viewedUser.ciudad || "";
             document.getElementById("edit-banda").value = viewedUser.banda_actual || "";
             document.getElementById("edit-estado").value = viewedUser.estado_disponibilidad || "";
             document.getElementById("edit-telefono").value = viewedUser.telefono || "";
-            document.getElementById("edit-foto").value = viewedUser.foto_url || "";
-            document.getElementById("edit-portada").value = viewedUser.portada_url || "";
             document.getElementById("edit-bio").value = viewedUser.bio || "";
+
+            // Limpiar inputs de archivo y mostrar vista previa actual si existe
+            document.getElementById("edit-foto-file").value = "";
+            document.getElementById("edit-portada-file").value = "";
+
+            if (viewedUser.foto_url) {
+                document.getElementById("preview-foto").src = viewedUser.foto_url;
+                document.getElementById("preview-foto-wrap").style.display = "block";
+            } else {
+                document.getElementById("preview-foto-wrap").style.display = "none";
+            }
+
+            if (viewedUser.portada_url) {
+                document.getElementById("preview-portada").src = viewedUser.portada_url;
+                document.getElementById("preview-portada-wrap").style.display = "block";
+            } else {
+                document.getElementById("preview-portada-wrap").style.display = "none";
+            }
+
             document.getElementById("edit-modal").classList.add("open");
-            document.getElementById("edit-specialty").value = viewedUser.instrumento || "";
         }
 
         // Guardar cambios en Supabase y actualizar localStorage
@@ -810,13 +988,11 @@
                 nombre: document.getElementById("edit-name").value.trim(),
                 instrumento: document.getElementById("edit-specialty").value.trim() || null,
                 ciudad: document.getElementById("edit-city").value.trim(),
-                nombre: document.getElementById("edit-name").value.trim(),
-                ciudad: document.getElementById("edit-city").value.trim(),
                 banda_actual: document.getElementById("edit-banda").value.trim(),
                 estado_disponibilidad: document.getElementById("edit-estado").value.trim(),
                 telefono: document.getElementById("edit-telefono").value.trim(),
-                foto_url: document.getElementById("edit-foto").value.trim() || null,
-                portada_url: document.getElementById("edit-portada").value.trim() || null,
+                foto_url: nuevaFotoBase64 !== null ? nuevaFotoBase64 : viewedUser.foto_url,
+                portada_url: nuevaPortadaBase64 !== null ? nuevaPortadaBase64 : viewedUser.portada_url,
                 bio: document.getElementById("edit-bio").value.trim()
             };
 
@@ -870,6 +1046,43 @@
                 .replace(/</g, "<")
                 .replace(/>/g, ">")
                 .replace(/"/g, "");
+        }
+
+
+        async function toggleRecommendMusician() {
+            if (!session || session.isGuest || session.accountType !== "banda" || !viewedUser) {
+                alert("Solo las cuentas registradas como Banda pueden recomendar músicos.");
+                return;
+            }
+
+            const btn = document.getElementById("btn-recommend-musician");
+            btn.disabled = true;
+
+            const actuales = Array.isArray(viewedUser.recomendaciones) ? [...viewedUser.recomendaciones] : [];
+            const indice = actuales.indexOf(session.id);
+
+            if (indice === -1) {
+                actuales.push(session.id); // Añadir recomendación
+            } else {
+                actuales.splice(indice, 1); // Quitar recomendación si vuelve a pulsar
+            }
+
+            const { data, error } = await db
+                .from("usuarios")
+                .update({ recomendaciones: actuales })
+                .eq("id", viewedUser.id)
+                .select()
+                .single();
+
+            btn.disabled = false;
+
+            if (error) {
+                alert("No se pudo actualizar la recomendación: " + error.message);
+                return;
+            }
+
+            viewedUser = data;
+            renderProfile();
         }
     </script>
 </body>
